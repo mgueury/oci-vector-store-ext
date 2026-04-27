@@ -2,8 +2,7 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
 
-. ./tf_env.sh
-. ./shared_compute.sh
+. $HOME/compute/shared_compute.sh
 
 # Install SQLCL
 install_sqlcl
