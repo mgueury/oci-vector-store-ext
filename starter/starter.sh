@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 #
-# starter.sh proxy. Run the real starter.sh 
+# starter.sh proxy. Run the real oci_starter.sh 
 # - in $PROJECT_DIR/bin
 # - or in $PATH
 #
 export PROJECT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+export CURRENT_DIR=`pwd`
 
-if [ -f $PROJECT_DIR/bin/starter.sh ]; then
+if [ -f $PROJECT_DIR/bin/oci_starter.sh ]; then
   export PATH=$PROJECT_DIR/bin:$PATH
 fi  
 
 (return 0 2>/dev/null) && SOURCED=1 || SOURCED=0
 if [ "$SOURCED" == "1" ]; then
-  . starter.sh $@
+  . oci_starter.sh $@
 else
-  starter.sh $@
+  oci_starter.sh $@
   exit ${PIPESTATUS[0]}
 fi

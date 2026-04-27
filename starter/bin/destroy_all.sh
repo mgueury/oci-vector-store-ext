@@ -26,7 +26,7 @@ cleanBucket() {
   export TF_OBJECT_STORAGE=`cat $STATE_FILE | jq -r '.resources[] | select(.instances[0].attributes.name=="'${BUCKET_NAME}'") | .instances[].attributes.bucket_id'`
   if [ "$TF_OBJECT_STORAGE" != "" ] && [ "$TF_OBJECT_STORAGE" != "null" ]; then
     title "Delete Object Storage"
-    oci os bucket delete --bucket-name $BUCKET_NAME --namespace-name $OBJECT_STORAGE_NAMESPACE --empty --force
+    oci os bucket delete --bucket-name $BUCKET_NAME --namespace-name $TF_VAR_namespace --empty --force
   else
     echo "No Object storage $BUCKET_NAME"
   fi  
