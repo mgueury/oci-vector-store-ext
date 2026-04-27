@@ -49,3 +49,4 @@ if [ "$TF_VAR_kubernetes" == "true" ]; then
     append_done "Kubernetes Chat: http://${TF_VAR_ingress_ip}/oke/index.html"
     append_done
 fi
+cat $FILE_DONE  
