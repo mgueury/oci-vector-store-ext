@@ -1,0 +1,21 @@
+# FastMCP
+fastmcp
+
+#DB26ai
+oracledb
+oci-genai-auth
+
+# OpenAI (Responses)
+openai
+
+# Langgraph
+langchain_oci
+langchain_community
+langchain_docling 
+langchain_openai
+oci-openai
+langgraph-cli[inmem]
+langchain_mcp_adapters
+
+# OAuth Caching 
+aiocache

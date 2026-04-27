@@ -1,0 +1,67 @@
+{
+    "music/country.pdf": {
+        "metadataAttributes": {
+            "type": "Music"
+        }
+    },
+    "music/dance.pdf": {
+        "metadataAttributes": {
+            "type": "Music"
+        }
+    },
+    "music/disco.pdf": {
+        "metadataAttributes": {
+            "type": "Music"
+        }
+    },
+    "music/rock.pdf": {
+        "metadataAttributes": {
+            "type": "Music"
+        }
+    },
+    "music/jazz.pdf": {
+        "metadataAttributes": {
+            "type": "Music"
+        }
+    },
+    "oracle/DocumentUnderstanding.pdf": {
+        "metadataAttributes": {
+            "type": "Oracle"
+        }
+    },
+    "oracle/Oracle Cloud Infrastructure Summary.pdf": {
+        "metadataAttributes": {
+            "type": "Oracle"
+        }
+    },
+    "oracle/What is Oracle Analytics.mp4": {
+        "metadataAttributes": {
+            "type": "Oracle"
+        }
+    },
+    "oracle/Why Oracle for AI.pdf": {
+        "metadataAttributes": {
+            "type": "Oracle"
+        }
+    },
+    "ords/oracle-rest-data-services-developers-guide.pdf" : {
+        "metadataAttributes": {
+            "type": "ords"
+        }
+    },
+    "ords/oracle-rest-data-services-installation-and-configuration-guide.pdf" : {
+        "metadataAttributes": {
+            "type": "ords"
+        }
+    },
+    "ords/oracle-rest-data-services-quick-start-guide.pdf" : {
+        "metadataAttributes": {
+            "type": "ords"
+        }
+    },
+    "ords/ords-faq.pdf" : {
+        "metadataAttributes": {
+            "type": "ords"
+        }
+    }
+}

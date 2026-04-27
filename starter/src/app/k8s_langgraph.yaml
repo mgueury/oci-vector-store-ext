@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ##APP_NAME##-dep
+  labels:
+      app: ##APP_NAME##
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ##APP_NAME##
+  template:
+    metadata:
+      labels:
+        app: ##APP_NAME##
+    spec:
+      containers:
+      - name: app
+        image: ##DOCKER_PREFIX##/##TF_VAR_prefix##-##APP_NAME##
+        ports:
+        - containerPort: 2024
+        envFrom:
+          - configMapRef:
+              name: tf-env-configmap        
+      imagePullSecrets:
+      - name: ocirsecret        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ##APP_NAME##-service
+spec:
+  selector:
+    app: ##APP_NAME##
+  ports:
+  - protocol: TCP
+    port: 2024
+    targetPort: 2024
+---

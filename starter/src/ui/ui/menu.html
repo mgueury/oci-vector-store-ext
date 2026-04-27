@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; }
+    .page-header {
+      width: 100vw;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      padding: 32px 0 16px 0;
+      position: relative;
+      z-index: 1;
+      letter-spacing: 2px;
+    }
+    .center-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 60vh;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .hamburger {
+      position: absolute;
+      left: 20px;
+      top: 30px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      z-index: 100;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    .hamburger:focus { outline: 2px solid #000; }
+    .hamburger span {
+      height: 4px;
+      background: #333;
+      margin: 4px 0;
+      border-radius: 2px;
+      transition: .3s;
+      width: 100%;
+      display: block;
+    }
+    nav {
+      position: absolute;
+      top: 0;
+      left: -260px;
+      height: 100vh;
+      width: 240px;
+      background: #fff;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+      transition: left .3s;
+      padding-top: 0px;
+      z-index: 150;
+      overflow-y: auto;
+    }
+    nav.open { left: 0; }
+    nav .current-indicator {
+      background: #eef4ff;
+      border-bottom: 1px solid #e0e7ef;
+      padding: 18px 18px 14px 18px;
+      font-size: 1rem;
+      font-weight: normal;
+      color: #005aad;
+    }
+    nav .indicator-label {
+      font-weight: bold;
+      color: #006;
+      font-size: .98em;
+      margin-right: 6px;
+      letter-spacing: .5px;
+    }
+    nav .section-title {
+      font-weight: bold;
+      margin: 20px 0 4px 18px;
+      font-size: 1rem;
+      color: #005aad;
+    }
+    nav ul { list-style: none; padding: 0; margin: 0; }
+    nav li {
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 1.02em;
+    }
+    nav li[aria-current="true"] {
+      font-weight: bold;
+      background: #deedfa;
+      color: #005aad;
+    }
+    nav li:focus,
+    nav li:hover {
+      background: #efefef;
+      outline: none;
+    }
+    @media (max-width: 500px) {
+      nav { width: 70vw; min-width: 150px;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="hamburger" aria-label="Open accessible agents menu" aria-controls="agentMenu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="page-header">Chat</div>
+  </header>
+
+  <nav id="agentMenu" aria-label="Accessible agents and users">
+    <div class="current-indicator">
+      <div>
+        <span class="indicator-label">Current user:</span>
+        <span id="currentUserDisplay">customer</span>
+      </div>
+      <div>
+        <span class="indicator-label">Current agent:</span>
+        <span id="currentAgentDisplay">agent</span>
+      </div>
+    </div>
+    <div class="section-title">Users</div>
+    <ul id="userList"></ul>
+    <div class="section-title">Agents</div>
+    <ul id="agentList"></ul>
+  </nav>
+
+  <main>
+    <div class="center-content">Chat</div>
+  </main>
+
+  <script>
+    const baseUrl = 'http://130.61.21.18:2024'
+
+    // State
+    let currentAgent = 'agent';
+    let currentUser = 'customer';
+    const users = ['employee', 'customer'];
+    let agentData = [];
+
+    // Hamburger menu logic
+    const hamburger = document.querySelector('.hamburger');
+    const nav = document.getElementById('agentMenu');
+    hamburger.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      syncCurrentDisplay();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === "Escape") {
+        nav.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    function renderUserList() {
+      const userList = document.getElementById('userList');
+      userList.innerHTML = '';
+      users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = user;
+        li.tabIndex = 0;
+        li.setAttribute('aria-current', user === currentUser ? 'true' : 'false');
+        li.addEventListener('click', () => {
+          setCurrentUser(user);
+        });
+        li.addEventListener('keydown', (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setCurrentUser(user);
+            e.preventDefault();
+          }
+        });
+        userList.appendChild(li);
+      });
+    }
+
+    async function fetchAgents() {
+      const response = await fetch(`${baseUrl}/assistants/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sort_by: 'assistant_id',
+          sort_order: 'asc'
+        })
+      });
+      if (!response.ok) throw new Error('Failed to fetch agents');
+      return await response.json();
+    }
+
+    function renderAgentList(agents) {
+      const agentList = document.getElementById('agentList');
+      agentList.innerHTML = '';
+      agents.forEach(agent => {
+        const li = document.createElement('li');
+        li.textContent = agent.graph_id;
+        li.tabIndex = 0;
+        li.setAttribute('aria-current', agent.graph_id === currentAgent ? 'true' : 'false');
+        li.addEventListener('click', () => {
+          setCurrentAgent(agent.graph_id);
+        });
+        li.addEventListener('keydown', (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setCurrentAgent(agent.graph_id);
+            e.preventDefault();
+          }
+        });
+        agentList.appendChild(li);
+      });
+    }
+
+    function syncCurrentDisplay() {
+      document.getElementById('currentUserDisplay').textContent = currentUser;
+      document.getElementById('currentAgentDisplay').textContent = currentAgent;
+      renderUserList();
+      renderAgentList(agentData);
+    }
+
+    function setCurrentAgent(agentName) {
+      currentAgent = agentName;
+      syncCurrentDisplay();
+      nav.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+
+    function setCurrentUser(user) {
+      currentUser = user;
+      syncCurrentDisplay();
+      nav.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+
+    // On page load
+    renderUserList();
+    fetchAgents()
+      .then(data => { agentData = data; renderAgentList(agentData); })
+      .catch(error => alert("Could not load agents: " + error));
+  </script>
+</body>
+</html>

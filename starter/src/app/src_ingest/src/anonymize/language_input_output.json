@@ -1,0 +1,581 @@
+POST
+	https://language.aiservice.eu-frankfurt-1.oci.oraclecloud.com/20221001/actions/batchDetectLanguagePiiEntities
+
+# ---------------------------------------------------------
+
+{
+    "documents": [
+        {
+            "languageCode": "auto",
+            "key": "1",
+            "text": "Functional Resume Sample\nJohn W. Smith\n2002 Front Range Way Fort Collins, CO 80525\njwsmith@colostate.edu\nCareer Summary\nFour years experience in early childhood development with a diverse background in the care o f\nspecial needs children and adults.\nAdult Care Experience\n• D e t e r m i n e d w o r k p l a c e m e n t f o r 1 5 0 s p e c i a l n e e d s a d u l t clients.\n• Maintained client databases and records.\n• Coordinated client contact with local health care professionals on a monthly basis.\nManaged 25 volunteer workers.\nChildcare Experience\nCoordinated service assignments for 20 part-time counselors and 100 client families.\nOversaw daily activity and outing planning for 100 clients.\n• Assisted families of special needs clients with researching financial assistance and\nhealthcare.\nAssisted teachers with managing daily classroom activities.\n• Oversaw daily and special student activities.\nEmployment History\n1999-2002\n1997-1999\n1996-1997\nCounseling Supervisor, The Wesley Center, Little Rock, Arkansas.\nClient Specialist, Rainbow Special Care Center, Little Rock, Arkansas\nTeacher's Assistant, Cowell Elementary, Conway, Arkansas\nE d u c a t i o n\nUniversity of Arkansas at Little Rock, Little Rock, AR\n• BS in Early Childhood Development (1999)\n• BA in Elementary Education (1998)\n• GPA (4.0 Scale): Early Childhood Development - 3.8, Elementary Education - 3.5,\nOverall 3.4.\n• Dean's List, Chancellor's List"
+        }
+    ],
+    "compartmentId": "ocid1.compartment.oc1..xxxxxx"
+}
+
+# ---------------------------------------------------------
+
+{
+    "documents": [
+        {
+            "key": "1",
+            "entities": [
+                {
+                    "offset": 25,
+                    "length": 13,
+                    "text": "John W. Smith",
+                    "type": "PERSON",
+                    "subType": null,
+                    "score": 0.9986022859811783,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 39,
+                    "length": 4,
+                    "text": "2002",
+                    "type": "DATETIME",
+                    "subType": "DATE",
+                    "score": 0.9982504844665527,
+                    "metaInfo": [
+                        {
+                            "offset": 39,
+                            "length": 4,
+                            "text": "2002",
+                            "subType": "YEAR",
+                            "score": 0.9982504844665527
+                        }
+                    ]
+                },
+                {
+                    "offset": 60,
+                    "length": 12,
+                    "text": "Fort Collins",
+                    "type": "LOCATION",
+                    "subType": "GPE",
+                    "score": 0.7891920506954193,
+                    "metaInfo": [
+                        {
+                            "offset": 60,
+                            "length": 12,
+                            "text": "Fort Collins",
+                            "subType": "CITY",
+                            "score": 0.7891920506954193
+                        }
+                    ]
+                },
+                {
+                    "offset": 77,
+                    "length": 5,
+                    "text": "80525",
+                    "type": "QUANTITY",
+                    "subType": "NUMBER",
+                    "score": 0.998069703578949,
+                    "metaInfo": [
+                        {
+                            "offset": 77,
+                            "length": 5,
+                            "text": "80525",
+                            "subType": "UNIT",
+                            "score": 0.998069703578949
+                        }
+                    ]
+                },
+                {
+                    "offset": 83,
+                    "length": 21,
+                    "text": "jwsmith@colostate.edu",
+                    "type": "EMAIL",
+                    "subType": null,
+                    "score": 0.9895544397072963,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 120,
+                    "length": 10,
+                    "text": "Four years",
+                    "type": "DATETIME",
+                    "subType": "DURATION",
+                    "score": 0.9858688414096832,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 489,
+                    "length": 7,
+                    "text": "monthly",
+                    "type": "DATETIME",
+                    "subType": "RECURRING",
+                    "score": 0.6826331615447998,
+                    "metaInfo": [
+                        {
+                            "offset": 489,
+                            "length": 7,
+                            "text": "monthly",
+                            "subType": "DATE",
+                            "score": 0.6826331615447998
+                        }
+                    ]
+                },
+                {
+                    "offset": 512,
+                    "length": 20,
+                    "text": "25 volunteer workers",
+                    "type": "QUANTITY",
+                    "subType": null,
+                    "score": 0.9972099264462789,
+                    "metaInfo": [
+                        {
+                            "offset": 512,
+                            "length": 2,
+                            "text": "25",
+                            "subType": "UNIT",
+                            "score": 0.9998844861984253
+                        },
+                        {
+                            "offset": 515,
+                            "length": 17,
+                            "text": "volunteer workers",
+                            "subType": "UNIT_TYPE",
+                            "score": 0.9958726465702057
+                        }
+                    ]
+                },
+                {
+                    "offset": 591,
+                    "length": 23,
+                    "text": "20 part-time counselors",
+                    "type": "QUANTITY",
+                    "subType": null,
+                    "score": 0.9995343089103699,
+                    "metaInfo": [
+                        {
+                            "offset": 591,
+                            "length": 2,
+                            "text": "20",
+                            "subType": "UNIT",
+                            "score": 0.9996023774147034
+                        },
+                        {
+                            "offset": 594,
+                            "length": 20,
+                            "text": "part-time counselors",
+                            "subType": "UNIT_TYPE",
+                            "score": 0.9995002746582031
+                        }
+                    ]
+                },
+                {
+                    "offset": 619,
+                    "length": 19,
+                    "text": "100 client families",
+                    "type": "QUANTITY",
+                    "subType": null,
+                    "score": 0.9636876384417216,
+                    "metaInfo": [
+                        {
+                            "offset": 619,
+                            "length": 3,
+                            "text": "100",
+                            "subType": "UNIT",
+                            "score": 0.9998442530632019
+                        },
+                        {
+                            "offset": 623,
+                            "length": 15,
+                            "text": "client families",
+                            "subType": "UNIT_TYPE",
+                            "score": 0.9456093311309814
+                        }
+                    ]
+                },
+                {
+                    "offset": 648,
+                    "length": 5,
+                    "text": "daily",
+                    "type": "DATETIME",
+                    "subType": "RECURRING",
+                    "score": 0.6431102752685547,
+                    "metaInfo": [
+                        {
+                            "offset": 648,
+                            "length": 5,
+                            "text": "daily",
+                            "subType": "DATE",
+                            "score": 0.6431102752685547
+                        }
+                    ]
+                },
+                {
+                    "offset": 687,
+                    "length": 11,
+                    "text": "100 clients",
+                    "type": "QUANTITY",
+                    "subType": null,
+                    "score": 0.9997202754020691,
+                    "metaInfo": [
+                        {
+                            "offset": 687,
+                            "length": 3,
+                            "text": "100",
+                            "subType": "UNIT",
+                            "score": 0.9999733567237854
+                        },
+                        {
+                            "offset": 691,
+                            "length": 7,
+                            "text": "clients",
+                            "subType": "UNIT_TYPE",
+                            "score": 0.9994671940803528
+                        }
+                    ]
+                },
+                {
+                    "offset": 787,
+                    "length": 10,
+                    "text": "healthcare",
+                    "type": "PRODUCT",
+                    "subType": null,
+                    "score": 0.7216233015060425,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 831,
+                    "length": 5,
+                    "text": "daily",
+                    "type": "DATETIME",
+                    "subType": "RECURRING",
+                    "score": 0.7485154867172241,
+                    "metaInfo": [
+                        {
+                            "offset": 831,
+                            "length": 5,
+                            "text": "daily",
+                            "subType": "DATE",
+                            "score": 0.7485154867172241
+                        }
+                    ]
+                },
+                {
+                    "offset": 869,
+                    "length": 5,
+                    "text": "daily",
+                    "type": "DATETIME",
+                    "subType": "RECURRING",
+                    "score": 0.6522586941719055,
+                    "metaInfo": [
+                        {
+                            "offset": 869,
+                            "length": 5,
+                            "text": "daily",
+                            "subType": "DATE",
+                            "score": 0.6522586941719055
+                        }
+                    ]
+                },
+                {
+                    "offset": 926,
+                    "length": 9,
+                    "text": "1999-2002",
+                    "type": "DATETIME",
+                    "subType": "INTERVAL",
+                    "score": 0.9986070394515991,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 936,
+                    "length": 9,
+                    "text": "1997-1999",
+                    "type": "DATETIME",
+                    "subType": "INTERVAL",
+                    "score": 0.987883448600769,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 946,
+                    "length": 9,
+                    "text": "1996-1997",
+                    "type": "DATETIME",
+                    "subType": "INTERVAL",
+                    "score": 0.9902445673942566,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 983,
+                    "length": 13,
+                    "text": "Wesley Center",
+                    "type": "ORGANIZATION",
+                    "subType": null,
+                    "score": 0.95897376537323,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 998,
+                    "length": 21,
+                    "text": "Little Rock, Arkansas",
+                    "type": "LOCATION",
+                    "subType": "GPE",
+                    "score": 0.823155403137207,
+                    "metaInfo": [
+                        {
+                            "offset": 998,
+                            "length": 11,
+                            "text": "Little Rock",
+                            "subType": "CITY",
+                            "score": 0.9822774529457092
+                        },
+                        {
+                            "offset": 1011,
+                            "length": 8,
+                            "text": "Arkansas",
+                            "subType": "STATE",
+                            "score": 0.5719309449195862
+                        }
+                    ]
+                },
+                {
+                    "offset": 1040,
+                    "length": 27,
+                    "text": "Rainbow Special Care Center",
+                    "type": "ORGANIZATION",
+                    "subType": null,
+                    "score": 0.9289684742689133,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 1069,
+                    "length": 11,
+                    "text": "Little Rock",
+                    "type": "LOCATION",
+                    "subType": "GPE",
+                    "score": 0.9913398325443268,
+                    "metaInfo": [
+                        {
+                            "offset": 1069,
+                            "length": 11,
+                            "text": "Little Rock",
+                            "subType": "CITY",
+                            "score": 0.9913398325443268
+                        }
+                    ]
+                },
+                {
+                    "offset": 1082,
+                    "length": 8,
+                    "text": "Arkansas",
+                    "type": "LOCATION",
+                    "subType": "GPE",
+                    "score": 0.9553791284561157,
+                    "metaInfo": [
+                        {
+                            "offset": 1082,
+                            "length": 8,
+                            "text": "Arkansas",
+                            "subType": "STATE",
+                            "score": 0.9553791284561157
+                        }
+                    ]
+                },
+                {
+                    "offset": 1131,
+                    "length": 6,
+                    "text": "Conway",
+                    "type": "LOCATION",
+                    "subType": "GPE",
+                    "score": 0.7092107534408569,
+                    "metaInfo": [
+                        {
+                            "offset": 1131,
+                            "length": 6,
+                            "text": "Conway",
+                            "subType": "CITY",
+                            "score": 0.7092107534408569
+                        }
+                    ]
+                },
+                {
+                    "offset": 1139,
+                    "length": 8,
+                    "text": "Arkansas",
+                    "type": "LOCATION",
+                    "subType": "GPE",
+                    "score": 0.9614619016647339,
+                    "metaInfo": [
+                        {
+                            "offset": 1139,
+                            "length": 8,
+                            "text": "Arkansas",
+                            "subType": "STATE",
+                            "score": 0.9614619016647339
+                        }
+                    ]
+                },
+                {
+                    "offset": 1166,
+                    "length": 22,
+                    "text": "University of Arkansas",
+                    "type": "ORGANIZATION",
+                    "subType": null,
+                    "score": 0.789947122335434,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 1192,
+                    "length": 11,
+                    "text": "Little Rock",
+                    "type": "ORGANIZATION",
+                    "subType": null,
+                    "score": 0.7249687314033508,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 1205,
+                    "length": 11,
+                    "text": "Little Rock",
+                    "type": "LOCATION",
+                    "subType": "GPE",
+                    "score": 0.9997606873512268,
+                    "metaInfo": [
+                        {
+                            "offset": 1205,
+                            "length": 11,
+                            "text": "Little Rock",
+                            "subType": "CITY",
+                            "score": 0.9997606873512268
+                        }
+                    ]
+                },
+                {
+                    "offset": 1218,
+                    "length": 2,
+                    "text": "AR",
+                    "type": "ORGANIZATION",
+                    "subType": null,
+                    "score": 0.619060218334198,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 1223,
+                    "length": 2,
+                    "text": "BS",
+                    "type": "ORGANIZATION",
+                    "subType": null,
+                    "score": 0.9896074533462524,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 1229,
+                    "length": 27,
+                    "text": "Early Childhood Development",
+                    "type": "ORGANIZATION",
+                    "subType": null,
+                    "score": 0.8454933961232504,
+                    "metaInfo": null
+                },
+                {
+                    "offset": 1258,
+                    "length": 4,
+                    "text": "1999",
+                    "type": "DATETIME",
+                    "subType": "DATE",
+                    "score": 0.9999820590019226,
+                    "metaInfo": [
+                        {
+                            "offset": 1258,
+                            "length": 4,
+                            "text": "1999",
+                            "subType": "YEAR",
+                            "score": 0.9999820590019226
+                        }
+                    ]
+                },
+                {
+                    "offset": 1294,
+                    "length": 4,
+                    "text": "1998",
+                    "type": "DATETIME",
+                    "subType": "DATE",
+                    "score": 0.9998475909233093,
+                    "metaInfo": [
+                        {
+                            "offset": 1294,
+                            "length": 4,
+                            "text": "1998",
+                            "subType": "YEAR",
+                            "score": 0.9998475909233093
+                        }
+                    ]
+                },
+                {
+                    "offset": 1307,
+                    "length": 3,
+                    "text": "4.0",
+                    "type": "QUANTITY",
+                    "subType": "NUMBER",
+                    "score": 0.9986516237258911,
+                    "metaInfo": [
+                        {
+                            "offset": 1307,
+                            "length": 3,
+                            "text": "4.0",
+                            "subType": "UNIT",
+                            "score": 0.9986516237258911
+                        }
+                    ]
+                },
+                {
+                    "offset": 1349,
+                    "length": 3,
+                    "text": "3.8",
+                    "type": "QUANTITY",
+                    "subType": "NUMBER",
+                    "score": 0.9999998807907104,
+                    "metaInfo": [
+                        {
+                            "offset": 1349,
+                            "length": 3,
+                            "text": "3.8",
+                            "subType": "UNIT",
+                            "score": 0.9999998807907104
+                        }
+                    ]
+                },
+                {
+                    "offset": 1377,
+                    "length": 3,
+                    "text": "3.5",
+                    "type": "QUANTITY",
+                    "subType": "NUMBER",
+                    "score": 1.0,
+                    "metaInfo": [
+                        {
+                            "offset": 1377,
+                            "length": 3,
+                            "text": "3.5",
+                            "subType": "UNIT",
+                            "score": 1.0
+                        }
+                    ]
+                },
+                {
+                    "offset": 1390,
+                    "length": 4,
+                    "text": "3.4.",
+                    "type": "QUANTITY",
+                    "subType": "NUMBER",
+                    "score": 0.9999964833259583,
+                    "metaInfo": [
+                        {
+                            "offset": 1390,
+                            "length": 4,
+                            "text": "3.4.",
+                            "subType": "UNIT",
+                            "score": 0.9999964833259583
+                        }
+                    ]
+                }
+            ],
+            "languageCode": "en"
+        }
+    ],
+    "errors": []
+}

@@ -1,0 +1,64 @@
+# FLASK
+Flask
+flask-cors
+
+# FastAPI
+waitress
+uvicorn[standard]   
+fastapi
+
+#DB26ai
+oracledb
+
+# OCI
+oci
+oci-genai-auth
+
+# OpenAI (Responses)
+openai
+
+# HTTP Client
+requests
+
+# Sitemap
+pdfkit
+pypdf
+
+# Streamlit
+streamlit
+
+# Anonymize
+pdf2image
+Pillow
+opencv-python
+
+# Selenium 
+selenium
+
+# sitemap.xml
+xmltodict
+
+# Crawler
+scrapy
+
+# OpenTelemetry
+opentelemetry-api
+opentelemetry-exporter-otlp
+opentelemetry-exporter-otlp-proto-http
+
+# Langgraph
+langchain_oci
+langchain_community
+langchain_chroma
+langchain_docling 
+langchain_text_splitters
+langchain_openai
+oci-openai
+langgraph-cli[inmem]
+langchain_mcp_adapters
+
+# OAuth Caching 
+aiocache
+
+# LangFuse
+langfuse

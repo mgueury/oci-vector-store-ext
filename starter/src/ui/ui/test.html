@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="chat.css">
+</head>
+
+<body>
+    <nav id="agentMenu" aria-label="Accessible agents and users">
+        <div class="section-title">Agents</div>
+        <ul id="agentList"></ul>
+        <div class="section-title">Users</div>
+        <ul id="userList"></ul>
+    </nav>
+    <div id="chat-container">
+        <h2>Chat</h2>
+        <div id="messages"></div>
+        <div id="spinner-container">
+        </div>
+        <form id="chat-form">
+            <input id="chat-input" type="text" placeholder="Type your message..." autocomplete="off" required />
+            <button type="submit">Send</button>
+        </form>
+        
+    </div>
+    <div id="currentDisplay">Agent: agent - User: customer</div>
+
+    <button class="hamburger" aria-label="Open accessible agents menu" aria-controls="agentMenu" aria-expanded="false">
+    </button>
+
+    <script>
+        const BASE_URL = 'http://130.61.21.18:2024'; // TODO: Replace with real backend
+        // const BASE_URL = '/langgraph/server';
+        // State
+        let currentAgent = 'agent';
+        let currentUser = 'customer';
+        const users = ['employee', 'customer'];
+
+        let thread_id = null;
+        let last_message_id = -1;
+        const messagesEl = document.getElementById('messages');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const spinnerContainer = document.getElementById('spinner-container');
+
+        // Utility: safely parse JSON
+        function safeParse(json) {
+            try { return JSON.parse(json); }
+            catch (e) { return {}; }
+        }
+        function renderMarkdown(md) {
+            return marked.parse(md || "");
+        }
+        // Add or move spinner below last message (show while waiting for SSE)
+        function showSpinner() {
+            spinnerContainer.innerHTML = `<div id="spinner"><div class="pulse-dot"></div></div>`;
+            scrollToBottom();
+        }
+        // Remove spinner (when SSE is done)
+        function hideSpinner() {
+            spinnerContainer.innerHTML = '';
+        }
+
+        function scrollToBottom() {
+            // Scroll so the anchor div is visible
+            document.getElementById('spinner-container').scrollIntoView({ behavior: "smooth" });
+        }
+
+
+        function renderJsTable(data) {
+            if (!Array.isArray(data) || data.length === 0) return "<em>(No data)</em>";
+
+            const headers = Object.keys(data[0]);
+            let html = '<table>';
+            html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+            html += '<tbody>';
+            for (const row of data) {
+                html += '<tr>';
+                for (let h of headers) {
+                    let value = row[h];
+                    if (typeof value === 'string' && /^https?:\/\//.test(value)) {
+                        html += `<td><a href="${value}" target="_blank">URL</a></td>`;
+                    } else {
+                        html += `<td>${value}</td>`;
+                    }
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function renderMessage(msgObj) {
+            const el = document.createElement('div');
+            el.classList.add('message');
+            el.classList.add(msgObj.type || 'ai');
+            let innerHTML = '';
+            // Human message
+            if (msgObj.type === 'human') {
+                innerHTML = `<div class="bubble"><div class="meta">You</div>${renderMarkdown(msgObj.content)}</div>`;
+            } else if (msgObj.type === 'ai') {
+                if (msgObj.content) {
+                    innerHTML = `<div class="bubble"><div class="meta">AI</div>${renderMarkdown(msgObj.content)}`;
+                    if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
+                        let tools = msgObj.tool_calls.map(t =>
+                            `<div><b>${t.name}</b> &rarr; <code>${JSON.stringify(t.args)}</code></div>`
+                        ).join('');
+                        innerHTML += `<div class="tool-calls">${tools}</div>`;
+                    }
+                    innerHTML += `</div>`;
+                } else if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
+                    let bubble = `<div class="bubble"><div class="meta">Tool Calls</div>`;
+                    let tools = msgObj.tool_calls.map(t =>
+                        `<tr><td>${t.name}</td><td>${JSON.stringify(t.args)}</td></tr>`
+                    ).join('');
+                    bubble += `<table class='tools-table'><thead><tr><th>Name</th><th>Arguments</th><tr></thead><tbody>${tools}</tbody></table>`;
+                    innerHTML = bubble;
+                }
+            } else if (msgObj.type === 'tool') {
+                let data = msgObj.artifact?.structured_content ?? {};
+                let bubble = "<div class='bubble'><div class='meta'>Tool - " + msgObj.name + "</div>";
+                if (data?.response) {
+                    bubble += renderMarkdown(data.response);
+                }
+                if (data?.result) {
+                    bubble += renderJsTable(data.result);
+                }
+                bubble += "</div>";
+                innerHTML = bubble;
+            }
+            el.innerHTML = innerHTML;
+            messagesEl.appendChild(el);
+            scrollToBottom();
+        }
+
+        function startSSE(reqBody, onMessage, onDone) {
+            showSpinner();
+            const url = `${BASE_URL}/threads/${thread_id}/runs/stream`;
+
+            // SSE with POST is non-standard. We'll use fetch + stream reader
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", 'Authorization': 'User CUSTOMER' },
+                body: JSON.stringify(reqBody),
+            }).then(async response => {
+                if (!response.ok || !response.body) {
+                    hideSpinner();
+                    onMessage({ type: "ai", content: "Network/server error." });
+                    if (onDone) onDone();
+                    return;
+                }
+                const reader = response.body.getReader();
+                let pending = '';
+                while (true) {
+                    let { done, value } = await reader.read();
+                    if (done) break;
+                    let chunk = new TextDecoder().decode(value);
+                    pending += chunk;
+                    // Handle SSE events: lines like `data: {...}\n\n`
+                    let parts = pending.split('\r\n\r\n');
+                    pending = parts.pop(); // Last piece (possibly incomplete)
+                    for (let part of parts) {
+                        let lines = part.split('\r\n');
+                        for (let line of lines) {
+                            let match = line.match(/^data:\s*(.*)$/m);
+                            if (match) {
+                                let data = match[1];
+                                let json = safeParse(data);
+                                if (json?.messages) {
+                                    for (const id in json.messages) {
+                                        if (id > last_message_id) {
+                                            onMessage(json.messages[id]);
+                                            last_message_id = id
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                hideSpinner();
+                if (onDone) onDone();
+            }).catch(e => {
+                hideSpinner();
+                onMessage({ type: "ai", content: "Connection error." });
+                if (onDone) onDone();
+            });
+        }
+
+        async function getThreadId() {
+            const url = `${BASE_URL}/threads?2=2`;
+            try {
+                const resp = await fetch(url, {
+                    method: "POST",
+                    body: "{}",
+                    headers: { Authorization: 'User CUSTOMER' }
+                });
+                const data = await resp.json();
+                return data.thread_id;
+            } catch (e) {
+                alert("Failed to connect to chat server.");
+            }
+        }
+
+        function addMessage(msgObj) {
+            renderMessage(msgObj);
+        }
+
+        chatForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+
+            addMessage({ type: "human", content: msg });
+            chatInput.value = '';
+
+            const reqBody = {
+                "assistant_id": "agent",
+                input: { messages: [{ role: "human", content: msg }] }
+            };
+
+            startSSE(reqBody, respMsg => {
+                try {
+                    if (!respMsg) return;
+                    // Filter out empty events
+                    if ("type" in respMsg && respMsg.type == "human") {
+                        console.log("Skip type=human");
+                    } else if ("content" in respMsg && (respMsg.content || (Array.isArray(respMsg.content) && respMsg.content.length))) {
+                        addMessage(respMsg);
+                    } else if (respMsg.tool_calls) {
+                        // Sometimes tool_calls is the main payload
+                        addMessage(respMsg);
+                    } else {
+                        // Sometimes tool_calls is the main payload
+                        addMessage(respMsg);
+                    }
+                } catch (e) {
+                    console.log("Failed to add message:" + e);
+                }
+            });
+        });
+
+        (async function init() {
+            thread_id = await getThreadId();
+            last_message_id = 0;
+            if (!thread_id) {
+                messagesEl.innerHTML = '<div class="message ai">Error: could not get thread_id from backend.</div>';
+                chatInput.disabled = true;
+            }
+        })();
+
+        // -- Hamburger menu logic ------------------------------------------
+        const hamburger = document.querySelector('.hamburger');
+        const nav = document.getElementById('agentMenu');
+        hamburger.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            hamburger.setAttribute('aria-expanded', isOpen);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === "Escape") {
+                nav.classList.remove('open');
+                hamburger.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Users section
+        function renderUserList() {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user;
+                li.tabIndex = 0;
+                li.setAttribute('aria-current', user === currentUser ? 'true' : 'false');
+
+                li.addEventListener('click', () => setCurrentUser(user));
+                li.addEventListener('keydown', (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        setCurrentUser(user);
+                        e.preventDefault();
+                    }
+                });
+                userList.appendChild(li);
+            });
+        }
+
+        // Agents section
+        async function fetchAgents() {
+            const response = await fetch(`${BASE_URL}/assistants/search`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json',
+                           'Authorization': 'User CUSTOMER' },
+                body: JSON.stringify({
+                    sort_by: 'assistant_id',
+                    sort_order: 'asc'
+                })
+            });
+            if (!response.ok) throw new Error('Failed to fetch agents');
+            return await response.json();
+        }
+
+        function renderAgentList(agents) {
+            const agentList = document.getElementById('agentList');
+            agentList.innerHTML = '';
+            agents.forEach(agent => {
+                const li = document.createElement('li');
+                li.textContent = agent.graph_id;
+                li.tabIndex = 0;
+                li.setAttribute('aria-current', agent.graph_id === currentAgent ? 'true' : 'false');
+
+                li.addEventListener('click', () => setCurrentAgent(agent.graph_id));
+                li.addEventListener('keydown', (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        setCurrentAgent(agent.graph_id);
+                        e.preventDefault();
+                    }
+                });
+                agentList.appendChild(li);
+            });
+        }
+
+        // Updating display
+        function updateDisplay() {
+            document.getElementById('currentDisplay').textContent = `Agent: ${currentAgent} - User: ${currentUser}`;
+        }
+        function setCurrentAgent(agentName) {
+            currentAgent = agentName;
+            updateDisplay();
+            nav.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+            // Re-render to update aria-current
+            fetchAgents().then(renderAgentList);
+            renderUserList();
+        }
+        function setCurrentUser(user) {
+            currentUser = user;
+            updateDisplay();
+            nav.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+            // Re-render to update aria-current
+            fetchAgents().then(renderAgentList);
+            renderUserList();
+        }
+
+        // On page load
+        renderUserList();
+        fetchAgents()
+            .then(renderAgentList)
+            .catch(error => alert("Could not load agents: " + error));
+
+    </script>
+</body>
+
+</html>

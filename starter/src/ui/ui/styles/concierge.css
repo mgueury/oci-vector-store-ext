@@ -1,0 +1,284 @@
+.oda-chat-wrapper .oda-chat-conversation {
+	background-image: url("../images/background.png") !important; /*@@ Chatwindow background */
+}
+
+body {
+	background-image: url("../images/homepage.jpg"); /*@@ Webpage background */
+	background-repeat: no-repeat;
+	background-size: cover;
+	margin: 0;
+	padding: 0;
+	background-position: top center;
+	height: 100vh;
+}
+
+.oda-chat-widget {
+	max-height: 95vh !important;
+	height: 95vh !important;
+	bottom: 0px !important;
+	right: 0px !important;
+}
+
+.oda-chat-wrapper .oda-chat-widget {
+	border-radius: 12px 12px 12px 12px !important;
+}
+
+.oda-chat-user-input {
+	border: 1px solid #dadada !important;
+	border-radius: 16px !important;
+	box-sizing: border-box !important;
+	color: #333 !important; /*@@ User typing textcolor */
+	font-size: 16px !important;
+	flex: 1 !important;
+	/* height: 32px !important; */
+	line-height: 18px !important;
+	margin: 0 6px !important;
+	/* max-height: 61px !important;
+	min-height: 32px !important; */
+	outline: none !important;
+	overflow: auto !important;
+	/* padding: 6px 14px !important; */
+	resize: none !important;
+	text-align: start !important;
+	padding-right: 125px !important;
+}
+
+.oda-chat-wrapper .oda-chat-logo {
+	background-color: #173D91; /*@@ ?? */
+	width: 42px;
+	height: 42px;
+	max-height: 42px;
+	max-width: 42px;
+	border-radius: 50%;
+}
+
+.footerBtns{
+	display: flex;
+}
+
+.oda-chat-wrapper .oda-chat-footer{
+	background-color: #eee !important; /*@@ Background around typing box */
+}
+
+.footerButtonLeft{
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+	border-color: #888;
+	background-color: #eee; /*@@ Left button background (no hover) */
+	color: #173D91; /*@@ Left button text (no hover) */
+	border-width: 1px 0px 0px;
+	border-top-style: solid;
+	border-radius: 0px 0px 0px 15px !important;
+	font-weight: 500;
+	line-height: 2.2;
+	min-width: unset;
+	padding: 2px 0px !important;
+	font-family: unset !important;
+	font-size: unset !important;
+}
+
+.footerButtonRight{
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+	border-color: #888;
+	background-color: #eee; /*@@ Right button background (no hover) */
+	color: #173D91; /*@@ Right button background (no hover) */
+	border-width: 1px 0px 0px;
+	border-top-style: solid;
+	border-radius: 0px 0px 15px 0px !important;
+	font-weight: 500;
+	line-height: 2.2;    
+	min-width: unset;
+	padding: 2px 0px !important;
+	font-family: unset !important;
+	font-size: unset !important;
+}
+
+.footerButtonLeft:hover {
+  background-color: #173D91; /*@@ Left button background (hover) */
+  font-weight: bold;
+  color: white; /*@@ Left button text (hover) */
+}
+
+.footerButtonRight:hover {
+  background-color: #173D91; /*@@ Right button background (hover) */
+  font-weight: bold;
+  color: white; /*@@ Right button background (hover) */
+}
+
+.oda-chat-message-global-actions {
+	display: inline-flex;
+}
+
+.oda-chat-wrapper .oda-chat-message-global-actions button {
+	margin-right: 8px;
+}
+
+.oda-chat-wrapper .oda-chat-card-message-content{
+	margin: 8px 0 0 !important;
+}
+
+.oda-chat-card-title {
+	margin-bottom: 16px !important;
+}
+
+.oda-chat-wrapper .oda-chat-message-block.oda-chat-right {
+	margin-top: 16px !important;
+	margin-bottom: 16px !important;
+}
+
+.more
+{
+	display: none;
+}
+
+.oda-chat-button {
+	border-radius: 1000px;
+	display: flex;
+	flex-direction: row-reverse;
+	align-items: center;
+	width: 64px;
+	/* transition: all .4s cubic-bezier(0.65, 0, 0.35, 1); */
+}
+
+.oda-chat-wrapper .oda-chat-button:not(.oda-chat-none) {
+	background-color: #173D91 !important;  /* @@ Popup-Pubble around botIcon background */
+	border-radius: 500px !important;
+}
+
+.oda-chat-button img {
+	min-width: 64px !important;
+	width: 64px !important;
+	max-width: 64px !important;
+}
+
+.oda-chat-button:hover {
+	width: 256px !important;
+	border-radius: 4px 34px 34px 4px;
+}
+.oda-chat-button:hover .oda-chat-letschat {
+	display: flex;
+	animation: slide-in-right 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.4s both;
+}
+
+.oda-chat-chatopen {
+	width: 256px !important;
+	border-radius: 4px 34px 34px 4px;
+	display: flex;
+	animation: slide-in-right 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.4s both;
+}
+
+.oda-chat-letschat {
+	display: none;
+	color: #fff;  /* @@ Popup-Bubble around botIcon textcolor */
+	position: relative;
+	margin: 0 0 0 30px;
+	font-size: 20px;
+	font-style: italic;
+	align-self: center;
+	animation-name: fadeInOut;
+	animation-delay: 1.2s;
+	animation-duration: 19s;
+	animation-timing-function: ease-in-out;
+	width: 280px !important;
+	min-width: 64px !important;
+	max-width: 280px !important;
+}
+.oda-chat-chatopen > .oda-chat-letschat,
+.oda-chat-letschatShow {
+	opacity: 1;
+	display: flex;
+	animation: slide-in-right 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.4s both;
+}
+
+@keyframes slide-in-right {
+	0% {
+		transform: translateX(50px);
+		opacity: 0;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+#thumbwrap {
+	margin:75px auto;
+	width:252px; height:252px;
+}
+.thumb {
+	float:left; /* must be floated for same cross browser position of larger image */
+	position:relative;
+	margin:3px;
+}
+.thumb img { 
+	border:1px solid #000;
+	vertical-align:bottom;
+}
+.thumb:hover {
+	border:0; /* IE6 needs this to show large image */
+	z-index:1;
+}
+.thumb span { 
+	position:absolute;
+	visibility:hidden;
+}
+.thumb:hover span { 
+	visibility:visible;
+	top:37px; left:37px; 
+}
+
+.oda-chat-conversation-pane {
+	background-color: transparent !important; /*@@ Chatwindow background */
+}
+
+.oda-chat-attachment-footer{
+	display:none !important;
+} 	
+
+.oda-chat-right .oda-chat-message-bubble {
+	background-color: #173D91; /*@@ ?? User typed bubble background ?? */
+	color: white; /*@@ User typed bubble textcolor */
+}
+   
+dt, strong, b {
+	font-weight: 700 !important; 
+}
+
+.oda-chat-wrapper button img {
+	width: 20px !important;
+	height: 64px !important;
+}
+
+.oda-chat-wrapper .oda-chat-button {
+	height: 64px !important;
+	width: 64px;
+}
+
+.oda-chat-message-global-actions {
+	display: inline;
+}
+.oda-chat-message-global-actions .oda-chat-action-postback {
+	display: inline;
+	border-radius: 5px;
+	padding: 5px;
+	margin: 3px;
+	margin-inline: 3px;
+}
+
+.oda-chat-message-actions {
+	margin-top: 15px !important;
+	display: inline;
+}
+.oda-chat-message-actions .oda-chat-action-postback {
+	display: inline;
+	border-radius: 5px;
+	padding: 5px;
+	margin: 3px;
+	margin-inline: 3px;
+}
+.oda-chat-wrapper .oda-chat-messages-wrapper .oda-chat-message-list .oda-chat-message .oda-chat-message-wrapper {
+	margin-bottom: 7px;
+}

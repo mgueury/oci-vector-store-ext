@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ##APP_NAME##-dep
+  labels:
+      app: ##APP_NAME##
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ##APP_NAME##
+  template:
+    metadata:
+      labels:
+        app: ##APP_NAME##
+    spec:
+      containers:
+      - name: app
+        image: ##DOCKER_PREFIX##/##TF_VAR_prefix##-##APP_NAME##
+        envFrom:
+          - configMapRef:
+              name: tf-env-configmap
+      imagePullSecrets:
+      - name: ocirsecret        

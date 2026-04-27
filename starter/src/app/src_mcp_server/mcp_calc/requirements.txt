@@ -1,0 +1,5 @@
+# FastMCP
+fastmcp
+
+#DB26ai
+oracledb
