@@ -2,7 +2,7 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
 
-. $HOME/compute/tf_env.sh INSTALL
+. $HOME/compute/shared_compute.sh
 
 # Python 
 install_python

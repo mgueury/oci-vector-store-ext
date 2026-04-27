@@ -2,13 +2,7 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
 
-if [ -f shared_compute.sh ]; then
-  # Docker mode
-  . ./shared_compute.sh
-  export TF_VAR_java_vm="jdk"
-  # Do not install LibreOffice, the dependency makes the DockerImage 18GB
-  export INSTALL_LIBREOFFICE="no"
-fi
+. $HOME/compute/shared_compute.sh
 
 install_sqlcl
 . ./env.sh INSTALL
