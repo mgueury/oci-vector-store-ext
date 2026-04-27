@@ -3,7 +3,7 @@ export SRC_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pw
 export ROOT_DIR=${SRC_DIR%/*}
 cd $ROOT_DIR
 
-. ./starter.sh env
+. ./starter.sh env -silent
 
 # Upload Sample Files
 sleep 5
