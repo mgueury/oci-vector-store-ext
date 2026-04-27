@@ -24,14 +24,14 @@ if [ -f $HOME/app/ingest/responses_env.sh ]; then
 fi 
 
 # TNS_ADMIN
-export TNS_ADMIN=$HOME/db
+export TNS_ADMIN=$HOME/app/db
 
 # During Initialisation - Store the env db in the database
 # After Initialisation  - Use the env stored in the database as source of True
 # Read Variables in database 
 if [ "$1" != "INSTALL" ]; then
   if [ "$DB_URL" != "" ]; then
-    $HOME/db/sqlcl/bin/sql $DB_USER/$DB_PASSWORD@DB <<EOF
+    $HOME/app/db/sqlcl/bin/sql $DB_USER/$DB_PASSWORD@DB <<EOF
       set linesize 1000
       set heading off
       set feedback off

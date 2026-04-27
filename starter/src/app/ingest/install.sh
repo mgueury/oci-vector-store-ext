@@ -50,8 +50,8 @@ if [ "$TF_VAR_rag_storage" == "vector_store" ]; then
 
         . ./resource_env.sh
         # Store the config in APEX
-        export TNS_ADMIN=$HOME/db
-        $HOME/db/sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB <<EOF
+        export TNS_ADMIN=$HOME/app/db
+        $HOME/app/db/sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB <<EOF
 begin
     AI_CONFIG_UPDATE( 'vector_store_id', '$VECTOR_STORE_ID' );
 end;
