@@ -146,6 +146,9 @@ end;
 exit;
 EOF
 
+# Vector Store
+sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB @vs_mapping.sql
+
 # Support table
 sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB @support_table.sql
 
