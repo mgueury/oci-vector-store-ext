@@ -1,0 +1,18 @@
+exportedRestServices:
+- endpoint: "https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com/openai/v1/responses"
+  description: "Enterprise Agent AI Project"
+  name: "mdLabAgentRest"
+  version: "1.0"
+  type: "REST"
+  authType: "resourcePrincipal"
+  mock: false
+  restServiceMethods:
+  - restServiceMethodType: "POST"
+    contentType: "application/json"
+    statusCode: 200
+    requestBody: "{\n    \"model\": \"openai.gpt-oss-120b\",\n    \"input\": [\n        {\n            \"role\": \"user\",\n            \"content\": \"What is 3+3?\"\n        }\n    ],\n    \"tools\": [\n        {\n            \"type\": \"file_search\",\n            \"vector_store_ids\": [\n                \"##VECTORSTORE_OCID##\"\n            ]\n        }\n    ]\n}"
+    mockResponsePayload: "{\n    \"metadata\": {},\n    \"usage\": {\n        \"input_tokens_details\": {\n            \"cached_tokens\": 216\n        },\n        \"total_tokens\": 256,\n        \"output_tokens\": 30,\n        \"input_tokens\": 226,\n        \"output_tokens_details\": {\n            \"reasoning_tokens\": 11\n        }\n    },\n    \"created_at\": 1776434918,\n    \"tools\": [\n        {\n            \"vector_store_ids\": [\n                \"##VECTORSTORE_OCID##\"\n            ],\n            \"type\": \"file_search\"\n        }\n    ],\n    \"output\": [\n        {\n            \"summary\": [],\n            \"id\": \"reasoning_responses-019d9bc5-b5c6-1234-56c1-537543499c6b\",\n            \"type\": \"reasoning\",\n            \"content\": [\n                {\n                    \"text\": \"User asks simple math. Answer: 6.\",\n                    \"type\": \"reasoning_text\"\n                }\n            ],\n            \"status\": \"completed\"\n        },\n        {\n            \"role\": \"assistant\",\n            \"id\": \"msg_responses-019d9bc5-b5c6-7793-84c1-67465499c6b\",\n            \"type\": \"message\",\n            \"content\": [\n                {\n                    \"text\": \"3 + 3 = 6.\",\n                    \"type\": \"output_text\"\n                }\n            ],\n            \"status\": \"completed\"\n        }\n    ],\n    \"top_p\": 1,\n    \"parallel_tool_calls\": true,\n    \"temperature\": 1,\n    \"tool_choice\": \"\\\"auto\\\"\",\n    \"model\": \"gpt-oss-120b\",\n    \"id\": \"resp_fra_xmj99knanh10bl2hobu30nkljsdfgksljdhffkw2zva7u03qyk\",\n    \"object\": \"response\",\n    \"status\": \"completed\"\n}"
+    restServiceParams:
+    - type: "header"
+      key: "OpenAI-Project"
+      value: "ocid1.generativeaiproject.oc1.eu-frankfurt-1.amaaaaaaamaaaaaa...YOUR_PROJECT_OCID..."

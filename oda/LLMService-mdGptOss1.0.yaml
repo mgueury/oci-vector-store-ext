@@ -1,0 +1,17 @@
+exportedRestServices:
+- endpoint: "https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com/20231130/actions/chat"
+  description: "openai.gpt-oss-120b"
+  name: "mdGptOss"
+  version: "1.0"
+  type: "LLM"
+  authType: "resourcePrincipal"
+  llmType: "CUSTOM"
+  mock: false
+  llmProviderType: "ORACLE_GEN_AI"
+  restServiceMethods:
+  - restServiceMethodType: "POST"
+    contentType: "application/json"
+    statusCode: 200
+    requestBody: "{\n    \"compartmentId\": \"##COMPARTMENT_OCID##\",\n    \"servingMode\": {\n        \"modelId\": \"openai.gpt-oss-120b\",\n        \"servingType\": \"ON_DEMAND\"\n    },\n    \"chatRequest\": {\n        \"messages\": [\n            {\n                \"role\": \"USER\",\n                \"content\": [\n                    {\n                        \"type\": \"TEXT\",\n                        \"text\": \"What is 3*3?\"\n                    }\n                ]\n            }\n        ],\n        \"apiFormat\": \"GENERIC\",\n        \"maxTokens\": 4000,\n        \"isStream\": false,\n        \"numGenerations\": 1,\n        \"frequencyPenalty\": 0,\n        \"presencePenalty\": 0,\n        \"temperature\": 0,\n        \"topP\": 1,\n        \"topK\": 1\n    }\n}"
+    mockResponsePayload: "{\n    \"modelId\": \"openai.gpt-oss-120b\",\n    \"modelVersion\": \"1.0.0\",\n    \"chatResponse\": {\n        \"apiFormat\": \"GENERIC\",\n        \"usage\": {\n            \"promptTokensDetails\": {\n                \"cachedTokens\": 66\n            },\n            \"completionTokensDetails\": {\n                \"reasoningTokens\": 22\n            },\n            \"promptTokens\": 76,\n            \"totalTokens\": 117,\n            \"completionTokens\": 41\n        },\n        \"timeCreated\": \"2026-04-17T11:27:25.065Z\",\n        \"choices\": [\n            {\n                \"finishReason\": \"stop\",\n                \"index\": 0,\n                \"message\": {\n                    \"role\": \"ASSISTANT\",\n                    \"reasoningContent\": \"The user asks a simple math question: \\\"What is 3*3?\\\" Answer: 9.\",\n                    \"content\": [\n                        {\n                            \"text\": \"3 × 3 = 9.\",\n                            \"type\": \"TEXT\"\n                        }\n                    ]\n                },\n                \"logprobs\": {}\n            }\n        ]\n    }\n}"
+    restServiceParams: []

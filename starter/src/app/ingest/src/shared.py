@@ -423,14 +423,14 @@ def responses_upload_file( file_path, metadata ):
 ## -- responses_format --------------------------------------------------
 
 def responses_format(response):
-    log(pprint.pformat( response ))
-                
+    log(pprint.pformat(response, indent=2, sort_dicts=True))
+
     # 1. Get the assistant message
     message = next(
         (o for o in response.output if o.type == "message"),
         None
     )
-    
+
     if not message:
         return None
 
@@ -439,24 +439,69 @@ def responses_format(response):
     # 2. Extract text
     text = content.text
 
-    citations = []
+    # 3. Build a map: file_id -> metadata (URL, filename, score)
+    file_map = {}
 
     for item in response.output:
         if getattr(item, "type", None) != "file_search_call":
             continue
 
         for result in getattr(item, "results", []):
-            entry = {
-                "customized_url_source": result.attributes.get("customized_url_source"),
+            file_map[result.file_id] = {
+                "url": result.attributes.get("customized_url_source"),
                 "file_name": getattr(result, "filename", None),
                 "score": getattr(result, "score", None),
             }
-            citations.append(entry)
-    citations_sorted = sorted(citations, key=lambda x: x["score"] or 0, reverse=True)            
+
+    # 4. Extract citations from annotations (THIS is where page numbers are)
+    citations = []
+
+    for ann in getattr(content, "annotations", []):
+        if getattr(ann, "type", None) != "file_citation":
+            continue
+
+        file_id = ann.file_id
+
+        meta = file_map.get(file_id, {})
+
+        pages = []
+        if getattr(ann, "additional_properties", None):
+            pages = ann.additional_properties.get("page_numbers", [])
+
+        url = meta.get("url")
+        if len(pages)>0:
+            url = f"{url}#{pages[0]}"    
+
+        entry = {
+            "file_id": file_id,
+            "file_name": meta.get("file_name"),
+            "url": url,
+            "score": meta.get("score"),
+            "pages": pages,
+            "chunk_id": getattr(ann.additional_properties, "get", lambda *_: None)("chunk_id")
+            if getattr(ann, "additional_properties", None) else None,
+        }
+
+        citations.append(entry)
+
+    # Optional: deduplicate (same file + same page)
+    unique = {}
+    for c in citations:
+        key = (c["file_id"], tuple(c["pages"]))
+        if key not in unique:
+            unique[key] = c
+
+    citations_sorted = sorted(
+        unique.values(),
+        key=lambda x: x["score"] or 0,
+        reverse=True
+    )
+
+    log(pprint.pformat(citations_sorted, indent=2, sort_dicts=True))
 
     return {
         "response": text,
-        "citation": citations_sorted
+        "citations": citations_sorted
     }
 
 ## -- responses_upload_file --------------------------------------------------
