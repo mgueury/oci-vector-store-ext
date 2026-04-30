@@ -66,15 +66,13 @@ def createPool():
 ## -- init ------------------------------------------------------------------
 
 def init():
-    if RAG_STORAGE=="db26ai":
-        createPool()
+    createPool()
 
 ## -- close -----------------------------------------------------------------
 
 def close():
-    if RAG_STORAGE=="db26ai":
-        global pool 
-        pool.close()
+    global pool 
+    pool.close()
 
 ## -- updateCount ------------------------------------------------------------------
 
@@ -121,7 +119,7 @@ def upload_file( value, object_name, file_path, content_type, metadata ):
         value["metadata"] = metadata
         insertDoc( value, file_path, object_name )
     elif RAG_STORAGE=="vector_store":
-        shared.responses_upload_file(file_path, metadata)
+        insertDocInVS( value, file_path, metadata )
     else:
         namespace = value["data"]["additionalDetails"]["namespace"]
         bucketName = value["data"]["additionalDetails"]["bucketName"]
@@ -138,6 +136,8 @@ def delete_file( value, object_name ):
     log(f"<delete_file>{object_name}")     
     if RAG_STORAGE=="db26ai":
         deleteDocByOriginalResourceName( value )
+    elif RAG_STORAGE=="vector_store":
+        deleteDocByOriginalResourceNameInVS( value )
     else:
         try: 
             namespace = value["data"]["additionalDetails"]["namespace"]
@@ -155,6 +155,8 @@ def delete_folder(value, folder):
     log( "<delete_folder> "+folder)
     if RAG_STORAGE=="db26ai":
         deleteDocByOriginalResourceName( value )
+    elif RAG_STORAGE=="vector_store":
+        deleteDocByOriginalResourceNameInVS( value )
     else:
         namespace = value["data"]["additionalDetails"]["namespace"]
         bucketName = value["data"]["additionalDetails"]["bucketName"]
@@ -443,7 +445,93 @@ def deleteDocByPath( value ):
         if cur:
             cur.close() 
         if dbConn:
-            pool.release(dbConn)              
+            pool.release(dbConn)      
+
+
+# -- InsertVS ----------------------------------------------------------------
+
+def insertDocInVS( value, file_path, metadata ):  
+    log("<insertDocInVS>")
+
+    deleteDocByPathInVS( value )
+    file_id = shared.responses_upload_file(file_path, metadata)      
+    global pool
+    dbConn = pool.acquire() 
+    cur = dbConn.cursor()            
+    stmt = """
+        INSERT INTO vs_file_mapping(
+            file_id, path, original_resource_name
+        )
+        VALUES (:1, :2)
+    """
+    data = (
+            file_id, 
+            value["metadata"]["customized_url_source"],
+            dictString(metadata, "gaas-metadata-filtering-field-originalResourceName")
+        )
+    try:
+        cur.execute(stmt, data)
+        dbConn.commit()   
+        log(f"<insertDocInVS> Successfully inserted {cur.rowcount} records.")
+    except (Exception) as error:
+        log(f"\u270B <insertDocInVS> Error inserting records: {error}")
+    finally:
+        # Close the cursor and connection
+        if cur:
+            cur.close()
+        if dbConn:
+            pool.release(dbConn)          
+
+# -- deleteDocByOriginalResourceNameInVS ----------------------------------------------------------------
+
+def deleteDocByOriginalResourceNameInVS( value ):  
+    global pool
+    dbConn = pool.acquire()  
+    cur = dbConn.cursor()
+    originalResourceName = value["data"]["resourceName"]
+    log(f"<deleteDocByOriginalResourceNameInVS> originalResourceName={originalResourceName}")
+
+    # Delete the document record
+    try:
+        cur.execute("select file_id from vs_file_mapping where original_resource_name=:1", (originalResourceName,))
+        # Delete from vector store
+        for (file_id,) in cur.fetchall():
+            shared.responses_delete_file_from_vs(file_id)
+        cur.execute("delete from vs_file_mapping where original_resource_name=:1", (originalResourceName,))
+        dbConn.commit()
+        log(f"<deleteDocByOriginalResourceNameInVS> vs_file_mapping: Successfully {cur.rowcount} deleted")
+    except (Exception) as error:
+        log(f"<deleteDocByOriginalResourceNameInVS> vs_file_mapping: Error deleting: {error}")
+    finally:
+        # Close the cursor and connection
+        if cur:
+            cur.close()
+
+
+# -- deleteDocByPathInVS ----------------------------------------------------------------
+
+def deleteDocByPathInVS( value ):  
+    global pool
+    dbConn = pool.acquire() 
+    cur = dbConn.cursor()
+    path =  value["metadata"]["customized_url_source"]
+    log(f"<deleteDocByPathInVS> path={path}")
+
+    try:
+        cur.execute("select file_id from vs_file_mapping where path=:1", (path,))
+        # Delete from vector store
+        for (file_id,) in cur.fetchall():
+            shared.responses_delete_file_from_vs(file_id) 
+        # Delete from vs_file_mapping
+        cur.execute("delete from vs_file_mapping where path=:1", (path,)) 
+        dbConn.commit()
+        log(f"<deleteDocByPathInVS> docs: Successfully {cur.rowcount} deleted")
+    except (Exception) as error:
+        log(f"<deleteDocByPathInVS> docs: Error deleting: {error}")
+    finally:
+        # Close the cursor and connection
+        if cur:
+            cur.close()            
 
 # -- queryDb ----------------------------------------------------------------
 

@@ -420,6 +420,17 @@ def responses_upload_file( file_path, metadata ):
     )    
     log( f"<responses_upload_file>Uploaded ${file_path}" )
 
+## -- responses_delete_file_from_vs --------------------------------------------------
+
+def responses_delete_file_from_vs( file_id ):  
+    log(f"<responses_delete_file_from_vs> {file_id}")
+    client = responses_get_client()
+    delete_result = client.vector_stores.files.delete(
+        vector_store_id=VECTOR_STORE_ID,
+        file_id=file_id
+    )
+    log( "</responses_delete_file_from_vs>" )
+
 ## -- responses_format --------------------------------------------------
 
 def responses_format(response):
