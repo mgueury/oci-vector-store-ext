@@ -115,8 +115,8 @@ def upload_file( value, object_name, file_path, content_type, metadata ):
     if len(parts)>3:
         metadata['gaas-metadata-filtering-field-category3'] = parts[2]
 
+    value["metadata"] = metadata
     if RAG_STORAGE=="db26ai":
-        value["metadata"] = metadata
         insertDoc( value, file_path, object_name )
     elif RAG_STORAGE=="vector_store":
         insertDocInVS( value, file_path, metadata )
@@ -450,11 +450,11 @@ def deleteDocByPath( value ):
 
 # -- InsertVS ----------------------------------------------------------------
 
-def insertDocInVS( value, file_path, metadata ):  
+def insertDocInVS( value, file_path ):  
     log("<insertDocInVS>")
 
     deleteDocByPathInVS( value )
-    file_id = shared.responses_upload_file(file_path, metadata)      
+    file_id = shared.responses_upload_file(file_path, value["metadata"])      
     global pool
     dbConn = pool.acquire() 
     cur = dbConn.cursor()            
@@ -467,7 +467,7 @@ def insertDocInVS( value, file_path, metadata ):
     data = (
             file_id, 
             value["metadata"]["customized_url_source"],
-            dictString(metadata, "gaas-metadata-filtering-field-originalResourceName")
+            dictString(value["metadata"], "gaas-metadata-filtering-field-originalResourceName")
         )
     try:
         cur.execute(stmt, data)
