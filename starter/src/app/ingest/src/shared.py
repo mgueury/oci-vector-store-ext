@@ -419,6 +419,7 @@ def responses_upload_file( file_path, metadata ):
         attributes=metadata
     )    
     log( f"<responses_upload_file>Uploaded ${file_path}" )
+    return file_id
 
 ## -- responses_delete_file_from_vs --------------------------------------------------
 
