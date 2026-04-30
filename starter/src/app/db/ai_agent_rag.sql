@@ -33,7 +33,7 @@ prompt APPLICATION 1001 - AI_AGENT_VECTOR_STORE
 -- Application Export:
 --   Application:     1001
 --   Name:            AI_AGENT_VECTOR_STORE
---   Date and Time:   21:40 Monday April 27, 2026
+--   Date and Time:   13:20 Thursday April 30, 2026
 --   Exported By:     APEX_APP
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -118,7 +118,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_value_01=>'AI_AGENT_RAG'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>23
-,p_version_scn=>46844019322980
+,p_version_scn=>46865595493940
 ,p_print_server_type=>'NATIVE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -19511,7 +19511,8 @@ wwv_flow_imp_shared.create_install_script(
 '	"SESSION_ID" VARCHAR2(256), ',
 '	"URL" VARCHAR2(1024), ',
 '	"SNIPPET" CLOB, ',
-'	"PAGE" NUMBER',
+'	"PAGE" NUMBER, ',
+'	"QUESTION_ID" NUMBER',
 '   ) ;',
 '',
 '  CREATE TABLE "AI_AGENT_RAG_CONFIG" ',
@@ -19545,7 +19546,7 @@ wwv_flow_imp_shared.create_install_script(
 '  FUNCTION ai_agent_session return CLOB; ',
 '  FUNCTION ai_agent_execute( agent_session_id in out varchar2, message varchar2, filter_folder varchar2 default '''' ) return CLOB; ',
 '  FUNCTION create_pre_authenticated_request( url varchar2, page number) return varchar2; ',
-'  FUNCTION agent2html( res CLOB, session_id varchar2 ) return CLOB;',
+'  FUNCTION agent2html( a_res CLOB, a_session_id varchar2 ) return CLOB;',
 'end "AI_AGENT";',
 '/',
 'create or replace PACKAGE "AI_PLSQL" is',
@@ -19691,6 +19692,7 @@ wwv_flow_imp_shared.create_install_script(
 '            "vector_store_ids": ["'' || g_vector_store_id || ''"]',
 '          }',
 '        ],',
+'        "tool_choice": "required",',
 '        "include": [ "file_search_call.results" ]',
 '    }'');',
 '    jo := treat(je AS JSON_OBJECT_T);',
@@ -19945,8 +19947,9 @@ wwv_flow_imp_shared.create_install_script(
 '',
 '-------------------------------------------------------------------------------',
 '',
-'FUNCTION agent2html( res CLOB, session_id varchar2 ) return CLOB is',
+'FUNCTION agent2html( a_res CLOB, a_session_id varchar2 ) return CLOB is',
 '  message clob;',
+'  c number;',
 '  citation clob := '''';',
 '  url clob;',
 '  url_page clob;',
@@ -19960,6 +19963,7 @@ wwv_flow_imp_shared.create_install_script(
 '  arguments varchar2(4096);',
 '  arg_message varchar2(4096);',
 '  tool_name varchar2(4096);',
+'  v_question_id number;',
 '',
 '  -- vector_store helpers',
 '  output_arr JSON_ARRAY_T;',
@@ -19973,8 +19977,10 @@ wwv_flow_imp_shared.create_install_script(
 '  result_item JSON_OBJECT_T;',
 '  attr_obj JSON_OBJECT_T;',
 'begin',
+'    select nvl(max(question_id)+1,1) into v_question_id from ai_agent_rag_citation where session_id=a_session_id;',
+'',
 '    if g_rag_storage = ''vector_store'' then',
-'       je := JSON_ELEMENT_T.parse(res);',
+'       je := JSON_ELEMENT_T.parse(a_res);',
 '       jo := treat(je AS JSON_OBJECT_T);',
 '',
 '       citation := ''<div class="citation"> + <span class="hide">'';',
@@ -20070,22 +20076,28 @@ wwv_flow_imp_shared.create_install_script(
 '                         end if;',
 '',
 '                         -- same behavior as original case',
-'                         if url like ''https://objectstorage.%'' then',
-'                           insert into ai_agent_rag_citation( session_id, url, page, snippet)',
-'                           values (session_id, url, doc_page, ''-'')',
-'                           RETURNING id INTO l_id;',
+'                         select count(*) into c from ai_agent_rag_citation ',
+'                          where question_id=v_question_id',
+'                            and session_id=a_session_id',
+'                            and url=url',
+'                            and page=doc_page;',
+'                         if c=0 then     ',
+'                            insert into ai_agent_rag_citation( session_id, question_id, url, page, snippet)',
+'                            values (a_session_id, v_question_id, url, doc_page, ''-'')',
+'                            RETURNING id INTO l_id;                         ',
+'                            if url like ''https://objectstorage.%'' then',
+'                              url_page := APEX_PAGE.GET_URL(',
+'                                            p_page   => 2,',
+'                                            p_items  => ''P2_CITATION_ID'',',
+'                                            p_values => l_id );',
+'                            else',
+'                               url_page := url;',
+'                            end if;',
 '',
-'                           url_page := APEX_PAGE.GET_URL(',
-'                                         p_page   => 2,',
-'                                         p_items  => ''P2_CITATION_ID'',',
-'                                         p_values => l_id );',
-'                         else',
-'                           url_page := url;',
-'                         end if;',
-'',
-'                         url_page := ''<a href="'' || url_page || ''" target="_blank">'' || doc_name || ''</a>'';',
-'                         citation := citation || ''<li>'' || url_page || '' - '' ||',
-'                                     replace(content_item.get_string(''text''), ''"'', '''''''') || ''</li>'';',
+'                            url_page := ''<a href="'' || url_page || ''" target="_blank">'' || doc_name || ''</a>'';',
+'                            citation := citation || ''<li>'' || url_page || '' - '' ||',
+'                                        replace(content_item.get_string(''text''), ''"'', '''''''') || ''</li>'';',
+'                          end if;',
 '                       end if;',
 '                     end loop;',
 '                   end if;',
@@ -20106,11 +20118,11 @@ wwv_flow_imp_shared.create_install_script(
 '',
 '       return message || citation;',
 '    else',
-'      je := JSON_ELEMENT_T.parse(res);',
+'      je := JSON_ELEMENT_T.parse(a_res);',
 '      jo := treat(je AS JSON_OBJECT_T);',
 '      citation := ''<div class="citation"> + <span class="hide">'';',
 '      if jo.get_Object(''message'') is not null then',
-'        message := JSON_VALUE(res, ''$.message.content.text'');',
+'        message := JSON_VALUE(a_res, ''$.message.content.text'');',
 '        ai_agent.log(''message'', message);',
 '        if dbms_lob.INSTR( message, ''{"generatedQuery"'' )=1 then',
 '          -- SQL TOOL',
@@ -20155,7 +20167,7 @@ wwv_flow_imp_shared.create_install_script(
 '              end if;',
 '              if url like ''https://objectstorage.%'' then',
 '                insert into ai_agent_rag_citation( session_id, url, page, snippet)',
-'                  values (session_id, url, doc_page, ''-'') RETURNING id INTO l_id;',
+'                  values (a_session_id, url, doc_page, ''-'') RETURNING id INTO l_id;',
 '                url_page := APEX_PAGE.GET_URL ( p_page => 2, p_items  => ''P2_CITATION_ID'', p_values => l_id );',
 '              end if;',
 '              url_page := ''<a href="'' || url_page || ''" target="_blank">'' || doc_name || ''</a>'';',
@@ -20165,15 +20177,15 @@ wwv_flow_imp_shared.create_install_script(
 '        end if;',
 '      else',
 '        -- CLIENT TOOL',
-'        tool_name :=  JSON_VALUE(res, ''$.requiredActions[0].functionCall.name'');',
-'        arguments := JSON_VALUE(res, ''$.requiredActions[0].functionCall.arguments'');',
+'        tool_name :=  JSON_VALUE(a_res, ''$.requiredActions[0].functionCall.name'');',
+'        arguments := JSON_VALUE(a_res, ''$.requiredActions[0].functionCall.arguments'');',
 '        if tool_name = ''add'' then',
 '          message := ADD_TOOL( arguments );',
 '        else',
 '          message := ''ERROR: tool not implemented: ''|| tool_name;',
 '        end if;',
 '        message := ''<div>'' || message || ''</div>'';',
-'        citation := citation || ''TOOL <ul><li>action: '' || JSON_VALUE(res, ''$.requiredActions[0].requiredActionType'') || ''</li>'';',
+'        citation := citation || ''TOOL <ul><li>action: '' || JSON_VALUE(a_res, ''$.requiredActions[0].requiredActionType'') || ''</li>'';',
 '        citation := citation || ''<li>name: '' || tool_name || ''</li>'';',
 '        citation := citation || ''<li>arguments: '' || arguments || ''</li>'';',
 '      end if;',
@@ -20222,7 +20234,12 @@ wwv_flow_imp_shared.create_install_script(
 '          -- Get the Citations',
 '          je := jo.get_Object(''message'').get_Object(''content'').get_Array(''citations'');',
 '          ja := TREAT (je AS JSON_ARRAY_T);',
-'          if ja is null or ja.get_size = 0 then ',
+'          if '))
+);
+wwv_flow_imp_shared.append_to_install_script(
+ p_id=>wwv_flow_imp.id(189729810867477440)
+,p_script_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'ja is null or ja.get_size = 0 then ',
 '             citation := '''';',
 '          else',
 '            citation := citation || ''Citations: <ul>'';',
@@ -20239,12 +20256,7 @@ wwv_flow_imp_shared.create_install_script(
 '                url_page := url;',
 '              end if;',
 '              je := jo.get_Array(''pageNumbers'');',
-'              a_p'))
-);
-wwv_flow_imp_shared.append_to_install_script(
- p_id=>wwv_flow_imp.id(189729810867477440)
-,p_script_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'age := TREAT (je AS JSON_ARRAY_T);',
+'              a_page := TREAT (je AS JSON_ARRAY_T);',
 '              if a_page is not null and a_page.get_size > 0 then',
 '                doc_name := doc_name || '' ('';',
 '                FOR i_page IN 0 .. a_page.get_size - 1 loop',
