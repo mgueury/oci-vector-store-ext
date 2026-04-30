@@ -265,6 +265,7 @@ def convertOciSpeech(value):
 
     if eventType in [ "com.oraclecloud.objectstorage.updateobject", "com.oraclecloud.objectstorage.deleteobject" ]:
         # Delete previous speech conversion 
+        rag_storage.delete_file( value, resourceName )
         shared.delete_bucket_folder( namespace, bucketName, prefix )
 
     if eventType in [ "com.oraclecloud.objectstorage.createobject", "com.oraclecloud.objectstorage.updateobject" ]:
@@ -319,6 +320,7 @@ def convertOciDocumentUnderstanding(value):
 
     if eventType in [ "com.oraclecloud.objectstorage.updateobject", "com.oraclecloud.objectstorage.deleteobject" ]:
         # Delete previous conversion 
+        rag_storage.delete_file( value, resourceName )
         shared.delete_bucket_folder( namespace, bucketName, prefix )
         if eventType=="com.oraclecloud.objectstorage.deleteobject" and resourceName.endswith(".to_anonymize.pdf"):
             convertAnonymPDF( value, resourceName, None )
@@ -511,7 +513,9 @@ def convertAnonymPDF(value, originalResourceName, j):
         upload_manager = oci.object_storage.UploadManager(os_client, max_parallel_uploads=10)
         upload_manager.upload_file(namespace_name=namespace, bucket_name=bucketName, object_name=anonymizedPdf, file_path=pdf_file, part_size=2 * MEBIBYTE, content_type="application/pdf")
     elif eventType in [ "com.oraclecloud.objectstorage.deleteobject" ]:
-        os_client.delete_object(namespace_name=namespace, bucket_name=bucketName, object_name=anonymizedPdf)        
+        os_client.delete_object(namespace_name=namespace, bucket_name=bucketName, object_name=anonymizedPdf)
+        rag_storage.delete_file( value, originalResourceName )
+        
 
 
 ## -- convertUploadAnonymizedPDF ------------------------------------------------------------------

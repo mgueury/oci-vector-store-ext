@@ -362,7 +362,7 @@ def getFileExtension(resourceName):
 
 ## -- delete_bucket_folder --------------------------------------------------
 
-def delete_bucket_folder(namespace, bucketName, folder):
+def delete_bucket_folder( namespace, bucketName, folder):
     log( "<delete_bucket_folder> "+folder)
     try:
         os_client = oci.object_storage.ObjectStorageClient(config=shared_config, signer=shared_signer)    
