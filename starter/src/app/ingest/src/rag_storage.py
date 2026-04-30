@@ -119,7 +119,7 @@ def upload_file( value, object_name, file_path, content_type, metadata ):
     if RAG_STORAGE=="db26ai":
         insertDoc( value, file_path, object_name )
     elif RAG_STORAGE=="vector_store":
-        insertDocInVS( value, file_path, metadata )
+        insertDocInVS( value, file_path )
     else:
         namespace = value["data"]["additionalDetails"]["namespace"]
         bucketName = value["data"]["additionalDetails"]["bucketName"]
@@ -462,7 +462,7 @@ def insertDocInVS( value, file_path ):
         INSERT INTO vs_file_mapping(
             file_id, path, original_resource_name
         )
-        VALUES (:1, :2)
+        VALUES (:1, :2, :3)
     """
     data = (
             file_id, 
