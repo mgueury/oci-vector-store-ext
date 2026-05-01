@@ -68,6 +68,7 @@ fi
 # Application Specific installation
 # Build all app* directories
 $HOME/compute/rebuild.sh
+exit_on_error "compute_install.sh - rebuild"
 
 # -- app/start*.sh -----------------------------------------------------------
 if is_deploy_compute; then 

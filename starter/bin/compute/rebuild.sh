@@ -27,10 +27,12 @@ for APP_DIR in `app_dir_list`; do
         # Database
         title "Rebuild - $APP_NAME: Install"
         ${APP_DIR}/install.sh
+        exit_on_error "rebuild.sh - install"
     elif [ -f $APP_DIR/install.sh ] && [ is_deploy_compute ]; then
         # Build in terraform - compute 
         title "Rebuild: $APP_NAME: Install"
         ${APP_DIR}/install.sh
+        exit_on_error "rebuild.sh - install"
     fi
     if is_deploy_compute; then
         if [ -f ${APP_DIR}/restart.sh ]; then
