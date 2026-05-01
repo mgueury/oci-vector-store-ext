@@ -454,18 +454,18 @@ def insertDocInVS( value, file_path ):
     log("<insertDocInVS>")
 
     deleteDocByPathInVS( value )
-    file_id = shared.responses_upload_file(file_path, value["metadata"])      
+    vs_file_id = shared.responses_upload_file(file_path, value["metadata"])      
     global pool
     dbConn = pool.acquire() 
     cur = dbConn.cursor()            
     stmt = """
-        INSERT INTO vs_file_mapping(
-            file_id, path, original_resource_name
+        INSERT INTO docs(
+            vs_file_id, path, original_resource_name
         )
         VALUES (:1, :2, :3)
     """
     data = (
-            file_id, 
+            vs_file_id, 
             value["metadata"]["customized_url_source"],
             dictString(value["metadata"], "gaas-metadata-filtering-field-originalResourceName")
         )
@@ -493,15 +493,15 @@ def deleteDocByOriginalResourceNameInVS( value ):
 
     # Delete the document record
     try:
-        cur.execute("select file_id from vs_file_mapping where original_resource_name=:1", (originalResourceName,))
+        cur.execute("select vs_file_id from docs where original_resource_name=:1", (originalResourceName,))
         # Delete from vector store
-        for (file_id,) in cur.fetchall():
-            shared.responses_delete_file_from_vs(file_id)
-        cur.execute("delete from vs_file_mapping where original_resource_name=:1", (originalResourceName,))
+        for (vs_file_id,) in cur.fetchall():
+            shared.responses_delete_file_from_vs(vs_file_id)
+        cur.execute("delete from docs where original_resource_name=:1", (originalResourceName,))
         dbConn.commit()
-        log(f"<deleteDocByOriginalResourceNameInVS> vs_file_mapping: Successfully {cur.rowcount} deleted")
+        log(f"<deleteDocByOriginalResourceNameInVS> docs: Successfully {cur.rowcount} deleted")
     except (Exception) as error:
-        log(f"<deleteDocByOriginalResourceNameInVS> vs_file_mapping: Error deleting: {error}")
+        log(f"<deleteDocByOriginalResourceNameInVS> docs: Error deleting: {error}")
     finally:
         # Close the cursor and connection
         if cur:
@@ -518,12 +518,12 @@ def deleteDocByPathInVS( value ):
     log(f"<deleteDocByPathInVS> path={path}")
 
     try:
-        cur.execute("select file_id from vs_file_mapping where path=:1", (path,))
+        cur.execute("select vs_file_id from docs where path=:1", (path,))
         # Delete from vector store
-        for (file_id,) in cur.fetchall():
-            shared.responses_delete_file_from_vs(file_id) 
-        # Delete from vs_file_mapping
-        cur.execute("delete from vs_file_mapping where path=:1", (path,)) 
+        for (vs_file_id,) in cur.fetchall():
+            shared.responses_delete_file_from_vs(vs_file_id) 
+        # Delete from docs
+        cur.execute("delete from docs where path=:1", (path,)) 
         dbConn.commit()
         log(f"<deleteDocByPathInVS> docs: Successfully {cur.rowcount} deleted")
     except (Exception) as error:

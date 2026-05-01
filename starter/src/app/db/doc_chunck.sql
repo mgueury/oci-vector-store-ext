@@ -21,6 +21,7 @@ CREATE TABLE APEX_APP.docs (
     parsed_by varchar2(256),    
     title varchar2(1024),
     source_type varchar2(256),
+    vs_file_id varchar2(1024),           -- Vector Store File ID
     file_blob BLOB                       -- New Uploaded file 
 );
 
