@@ -402,7 +402,8 @@ def responses_upload_file( file_path, metadata ):
 
     ## Work-around - error with JSON (ingest failed)
     fileExtension = getFileExtension(file_path)
-    if fileExtension.endswith(".json"):
+    log( f"<responses_upload_file> fileExtension: {fileExtension}" )
+    if fileExtension.endswith("json"):
        log( f"<responses_upload_file>renaming file: {file_path}" )
        os.rename(file_path, file_path+".txt")
        file_path = file_path + ".txt"
