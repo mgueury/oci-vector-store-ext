@@ -400,6 +400,12 @@ def responses_upload_file( file_path, metadata ):
 
     client = responses_get_client()
 
+    ## Work-around - error with JSON (ingest failed)
+    fileExtension = shared.getFileExtension(file_path)
+    if fileExtension=="json":
+       os.rename(file_path, file_path+".txt")
+       file_path = file_path + ".txt"
+
     with open(file_path, "rb") as f:
         # warning: repeating means you're uploading a new version of the same file
         # and it will create a new file each time. In production,
