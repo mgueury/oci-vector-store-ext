@@ -403,6 +403,7 @@ def responses_upload_file( file_path, metadata ):
     ## Work-around - error with JSON (ingest failed)
     fileExtension = getFileExtension(file_path)
     if fileExtension=="json":
+       log( f"renaming file: {file_path}" )
        os.rename(file_path, file_path+".txt")
        file_path = file_path + ".txt"
 
@@ -436,6 +437,7 @@ def responses_delete_file_from_vs( file_id ):
         vector_store_id=VECTOR_STORE_ID,
         file_id=file_id
     )
+    client.files.delete(file_id=file_id)
     log( "</responses_delete_file_from_vs>" )
 
 ## -- responses_format --------------------------------------------------
