@@ -401,7 +401,7 @@ def responses_upload_file( file_path, metadata ):
     client = responses_get_client()
 
     ## Work-around - error with JSON (ingest failed)
-    fileExtension = shared.getFileExtension(file_path)
+    fileExtension = getFileExtension(file_path)
     if fileExtension=="json":
        os.rename(file_path, file_path+".txt")
        file_path = file_path + ".txt"
