@@ -239,7 +239,7 @@ def insertTableDocs( value ):
             content, summary, vs_file_id
         )
         VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21)
-        RETURNING id INTO :21
+        RETURNING id INTO :22
     """
     resourceName=value["data"]["resourceName"]
     # provided title if not resourceName
@@ -375,12 +375,12 @@ def insertTableDocsChunck(value, docs, file_path):
 def deleteDocByOriginalResourceName( value ):  
     global pool
     dbConn = pool.acquire()  
-    cur = dbConn.cursor()
     originalResourceName = value["data"]["resourceName"]
     log(f"<deleteDocByOriginalResourceName> originalResourceName={originalResourceName}")
 
     if RAG_STORAGE=="vector_store":
         try:
+            cur = dbConn.cursor()
             cur.execute("select vs_file_id from docs where original_resource_name=:1", (originalResourceName,))
             # Delete from vector store
             for (vs_file_id,) in cur.fetchall():
@@ -395,6 +395,7 @@ def deleteDocByOriginalResourceName( value ):
 
     # Delete the document record
     try:
+        cur = dbConn.cursor()
         cur.execute("delete from docs where original_resource_name=:1", (originalResourceName,))
         dbConn.commit()
         log(f"<deleteDocByOriginalResourceName> docs: Successfully {cur.rowcount} deleted")
@@ -428,12 +429,12 @@ def deleteDocByOriginalResourceName( value ):
 def deleteDocByPath( value ):  
     global pool
     dbConn = pool.acquire() 
-    cur = dbConn.cursor()
     path =  value["metadata"]["customized_url_source"]
     log(f"<deleteDocByPath> path={path}")
 
     if RAG_STORAGE=="vector_store":
         try:
+            cur = dbConn.cursor()
             cur.execute("select vs_file_id from docs where path=:1", (path,))
             # Delete from vector store
             for (vs_file_id,) in cur.fetchall():
@@ -448,6 +449,7 @@ def deleteDocByPath( value ):
 
     # Delete the document record
     try:
+        cur = dbConn.cursor()
         cur.execute("delete from docs where path=:1", (path,))
         dbConn.commit()
         log(f"<deleteDocByPath> docs: Successfully {cur.rowcount} deleted")
