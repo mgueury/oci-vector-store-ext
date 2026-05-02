@@ -89,7 +89,7 @@ def log_in_file(prefix, value):
 ## -- dictString ------------------------------------------------------------
 
 def dictString(d,key):
-   return d.get(key, "-")
+   return d.get(key, "")
    
 ## -- dictInt ------------------------------------------------------------
 

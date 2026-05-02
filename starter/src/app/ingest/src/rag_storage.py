@@ -240,9 +240,9 @@ def insertTableDocs( value ):
             status, application_name, author, translation, content_type,
             creation_date, modified, category1, category2, category3, parsed_by,
             resource_name, original_resource_name, path, title, region, summary_embed, source_type,
-            content, summary
+            content, summary, vs_file_id
         )
-        VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20)
+        VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21)
         RETURNING id INTO :21
     """
     resourceName=value["data"]["resourceName"]
@@ -279,6 +279,7 @@ def insertTableDocs( value ):
             dictString(value,"source_type"),
             dictString(value,"content"),
             dictString(value,"summary"),
+            dictString(value,"vs_file_id"),
             id_var
         )
     try:
@@ -455,32 +456,8 @@ def insertDocInVS( value, file_path ):
 
     deleteDocByPathInVS( value )
     vs_file_id = shared.responses_upload_file(file_path, value["metadata"])      
-    global pool
-    dbConn = pool.acquire() 
-    cur = dbConn.cursor()            
-    stmt = """
-        INSERT INTO docs(
-            vs_file_id, path, original_resource_name
-        )
-        VALUES (:1, :2, :3)
-    """
-    data = (
-            vs_file_id, 
-            value["metadata"]["customized_url_source"],
-            dictString(value["metadata"], "gaas-metadata-filtering-field-originalResourceName")
-        )
-    try:
-        cur.execute(stmt, data)
-        dbConn.commit()   
-        log(f"<insertDocInVS> Successfully inserted {cur.rowcount} records.")
-    except (Exception) as error:
-        log(f"\u270B <insertDocInVS> Error inserting records: {error}")
-    finally:
-        # Close the cursor and connection
-        if cur:
-            cur.close()
-        if dbConn:
-            pool.release(dbConn)          
+    value["vs_file_id"] = vs_file_id
+    insertTableDocs( value )
 
 # -- deleteDocByOriginalResourceNameInVS ----------------------------------------------------------------
 
