@@ -134,10 +134,8 @@ def upload_file( value, object_name, file_path, content_type, metadata ):
 
 def delete_file( value, object_name ): 
     log(f"<delete_file>{object_name}")     
-    if RAG_STORAGE=="db26ai":
+    if RAG_STORAGE in [ "db26ai", "vector_store" ]:
         deleteDocByOriginalResourceName( value )
-    elif RAG_STORAGE=="vector_store":
-        deleteDocByOriginalResourceNameInVS( value )
     else:
         try: 
             namespace = value["data"]["additionalDetails"]["namespace"]
@@ -153,10 +151,8 @@ def delete_file( value, object_name ):
 
 def delete_folder(value, folder):
     log( "<delete_folder> "+folder)
-    if RAG_STORAGE=="db26ai":
+    if RAG_STORAGE in [ "db26ai", "vector_store" ]:
         deleteDocByOriginalResourceName( value )
-    elif RAG_STORAGE=="vector_store":
-        deleteDocByOriginalResourceNameInVS( value )
     else:
         namespace = value["data"]["additionalDetails"]["namespace"]
         bucketName = value["data"]["additionalDetails"]["bucketName"]
@@ -383,6 +379,20 @@ def deleteDocByOriginalResourceName( value ):
     originalResourceName = value["data"]["resourceName"]
     log(f"<deleteDocByOriginalResourceName> originalResourceName={originalResourceName}")
 
+    if RAG_STORAGE=="vector_store":
+        try:
+            cur.execute("select vs_file_id from docs where original_resource_name=:1", (originalResourceName,))
+            # Delete from vector store
+            for (vs_file_id,) in cur.fetchall():
+                shared.responses_delete_file_from_vs(vs_file_id) 
+                log(f"<deleteDocByOriginalResourceName> Vector Store file deleted {vs_file_id}")
+        except (Exception) as error:
+            log(f"<deleteDocByOriginalResourceName> Vector Store file delete: {error}")
+        finally:
+            # Close the cursor and connection
+            if cur:
+                cur.close()  
+
     # Delete the document record
     try:
         cur.execute("delete from docs where original_resource_name=:1", (originalResourceName,))
@@ -395,21 +405,23 @@ def deleteDocByOriginalResourceName( value ):
         if cur:
             cur.close()
 
-    # Delete from the table directly..
-    cur = dbConn.cursor()
-    stmt = "delete FROM docs_langchain WHERE JSON_VALUE(metadata,'$.originalResourceName')=:1"
-    try:
-        cur.execute(stmt, (originalResourceName,))
-        dbConn.commit()
-        log(f"<deleteDocByOriginalResourceName> docs_langchain: Successfully {cur.rowcount} deleted")
-    except (Exception) as error:
-        log(f"<deleteDocByOriginalResourceName> docs_langchain: Error deleting: {error}")
-    finally:
-        # Close the cursor and connection
-        if cur:
-            cur.close()    
-        if dbConn:
-            pool.release(dbConn)            
+
+    if RAG_STORAGE=="db26ai":
+        # Delete from LangChain table directly...
+        cur = dbConn.cursor()
+        stmt = "delete FROM docs_langchain WHERE JSON_VALUE(metadata,'$.originalResourceName')=:1"
+        try:
+            cur.execute(stmt, (originalResourceName,))
+            dbConn.commit()
+            log(f"<deleteDocByOriginalResourceName> docs_langchain: Successfully {cur.rowcount} deleted")
+        except (Exception) as error:
+            log(f"<deleteDocByOriginalResourceName> docs_langchain: Error deleting: {error}")
+        finally:
+            # Close the cursor and connection
+            if cur:
+                cur.close()    
+            if dbConn:
+                pool.release(dbConn)            
 
 # -- deleteDocByPath --------------------------------------------------------
 
@@ -419,6 +431,20 @@ def deleteDocByPath( value ):
     cur = dbConn.cursor()
     path =  value["metadata"]["customized_url_source"]
     log(f"<deleteDocByPath> path={path}")
+
+    if RAG_STORAGE=="vector_store":
+        try:
+            cur.execute("select vs_file_id from docs where path=:1", (path,))
+            # Delete from vector store
+            for (vs_file_id,) in cur.fetchall():
+                shared.responses_delete_file_from_vs(vs_file_id) 
+                log(f"<deleteDocByPath> Vector Store file deleted {vs_file_id}")
+        except (Exception) as error:
+            log(f"<deleteDocByPath> Vector Store file delete: {error}")
+        finally:
+            # Close the cursor and connection
+            if cur:
+                cur.close()  
 
     # Delete the document record
     try:
@@ -432,21 +458,22 @@ def deleteDocByPath( value ):
         if cur:
             cur.close()
 
-    # Delete from the table directly..
-    cur = dbConn.cursor()
-    stmt = "delete FROM docs_langchain WHERE JSON_VALUE(metadata,'$.path')=:1"
-    try:
-        cur.execute(stmt, (path,))
-        dbConn.commit()
-        log(f"<deleteDocByPath> docs_langchain: Successfully {cur.rowcount} deleted")
-    except (Exception) as error:
-        log(f"<deleteDocByPath> docs_langchain: Error deleting: {error}")
-    finally:
-        # Close the cursor and connection
-        if cur:
-            cur.close() 
-        if dbConn:
-            pool.release(dbConn)      
+    if RAG_STORAGE=="db26ai":
+        # Delete from LangChain table directly...
+        cur = dbConn.cursor()
+        stmt = "delete FROM docs_langchain WHERE JSON_VALUE(metadata,'$.path')=:1"
+        try:
+            cur.execute(stmt, (path,))
+            dbConn.commit()
+            log(f"<deleteDocByPath> docs_langchain: Successfully {cur.rowcount} deleted")
+        except (Exception) as error:
+            log(f"<deleteDocByPath> docs_langchain: Error deleting: {error}")
+        finally:
+            # Close the cursor and connection
+            if cur:
+                cur.close() 
+            if dbConn:
+                pool.release(dbConn)      
 
 
 # -- InsertVS ----------------------------------------------------------------
@@ -454,61 +481,11 @@ def deleteDocByPath( value ):
 def insertDocInVS( value, file_path ):  
     log("<insertDocInVS>")
 
-    deleteDocByPathInVS( value )
+    deleteDocByPath( value )
     vs_file_id = shared.responses_upload_file(file_path, value["metadata"])      
     value["vs_file_id"] = vs_file_id
     insertTableDocs( value )
 
-# -- deleteDocByOriginalResourceNameInVS ----------------------------------------------------------------
-
-def deleteDocByOriginalResourceNameInVS( value ):  
-    global pool
-    dbConn = pool.acquire()  
-    cur = dbConn.cursor()
-    originalResourceName = value["data"]["resourceName"]
-    log(f"<deleteDocByOriginalResourceNameInVS> originalResourceName={originalResourceName}")
-
-    # Delete the document record
-    try:
-        cur.execute("select vs_file_id from docs where original_resource_name=:1", (originalResourceName,))
-        # Delete from vector store
-        for (vs_file_id,) in cur.fetchall():
-            shared.responses_delete_file_from_vs(vs_file_id)
-        cur.execute("delete from docs where original_resource_name=:1", (originalResourceName,))
-        dbConn.commit()
-        log(f"<deleteDocByOriginalResourceNameInVS> docs: Successfully {cur.rowcount} deleted")
-    except (Exception) as error:
-        log(f"<deleteDocByOriginalResourceNameInVS> docs: Error deleting: {error}")
-    finally:
-        # Close the cursor and connection
-        if cur:
-            cur.close()
-
-
-# -- deleteDocByPathInVS ----------------------------------------------------------------
-
-def deleteDocByPathInVS( value ):  
-    global pool
-    dbConn = pool.acquire() 
-    cur = dbConn.cursor()
-    path =  value["metadata"]["customized_url_source"]
-    log(f"<deleteDocByPathInVS> path={path}")
-
-    try:
-        cur.execute("select vs_file_id from docs where path=:1", (path,))
-        # Delete from vector store
-        for (vs_file_id,) in cur.fetchall():
-            shared.responses_delete_file_from_vs(vs_file_id) 
-        # Delete from docs
-        cur.execute("delete from docs where path=:1", (path,)) 
-        dbConn.commit()
-        log(f"<deleteDocByPathInVS> docs: Successfully {cur.rowcount} deleted")
-    except (Exception) as error:
-        log(f"<deleteDocByPathInVS> docs: Error deleting: {error}")
-    finally:
-        # Close the cursor and connection
-        if cur:
-            cur.close()            
 
 # -- queryDb ----------------------------------------------------------------
 
