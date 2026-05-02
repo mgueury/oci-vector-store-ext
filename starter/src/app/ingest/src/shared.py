@@ -404,11 +404,14 @@ def responses_upload_file( file_path, metadata ):
     fileExtension = getFileExtension(file_path)
     log( f"<responses_upload_file> fileExtension: {fileExtension}" )
     if fileExtension.endswith("json"):
-       log( f"<responses_upload_file>renaming file: {file_path}" )
-       os.rename(file_path, file_path+".txt")
-       file_path = file_path + ".txt"
+        log( f"<responses_upload_file>renaming file: {file_path}" )
+        os.rename(file_path, file_path+".txt")
+        file_path2 = file_path + ".txt"
+        log( f"<responses_upload_file> renaming file: {file_path2}" )
+    else:
+        file_path2 = file_path   
 
-    with open(file_path, "rb") as f:
+    with open(file_path2, "rb") as f:
         # warning: repeating means you're uploading a new version of the same file
         # and it will create a new file each time. In production,
         # you should store the file ID and reuse it.
@@ -426,7 +429,7 @@ def responses_upload_file( file_path, metadata ):
         file_id=file_id,
         attributes=metadata
     )    
-    log( f"<responses_upload_file>Uploaded ${file_path}" )
+    log( f"<responses_upload_file>Uploaded ${file_path2}" )
     return file_id
 
 ## -- responses_delete_file_from_vs --------------------------------------------------
