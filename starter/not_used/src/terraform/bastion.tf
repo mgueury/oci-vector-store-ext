@@ -12,6 +12,10 @@ resource "oci_core_instance" "starter_bastion" {
     memory_in_gbs = var.instance_shape_config_memory_in_gbs
   }
 
+  instance_options {
+    are_legacy_imds_endpoints_disabled = true
+  }
+
   create_vnic_details {
     subnet_id                 = data.oci_core_subnet.starter_web_subnet.id
     display_name              = "Primaryvnic"

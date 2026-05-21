@@ -220,9 +220,9 @@ Diff:
 
 
 def llm_review(commit_info: Dict[str, str], diff_text: str, changed_files: List[str]) -> Dict[str, Any]:
-    model = os.environ.get("TF_VAR_responses_model_id")
+    model = os.environ.get("TF_VAR_genai_model")
     if not model:
-        raise SystemExit("TF_VAR_responses_model_id is not set")
+        raise SystemExit("TF_VAR_genai_model is not set")
 
     try:
         from openai import OpenAI

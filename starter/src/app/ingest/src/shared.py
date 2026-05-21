@@ -46,7 +46,7 @@ REGION = os.getenv("TF_VAR_region")
 COMPARTMENT_OCID = os.getenv("TF_VAR_compartment_ocid")
 PROJECT_OCID = os.getenv("TF_VAR_project_ocid")
 VECTOR_STORE_ID = os.getenv("VECTOR_STORE_ID")
-RESPONSES_MODEL_ID = os.getenv("TF_VAR_responses_model_id")
+GENAI_MODEL = os.getenv("TF_VAR_genai_model")
 BUCKET_URL = os.getenv("BUCKET_URL")
 
 ## -- getLogDir -------------------------------------------------------------------
@@ -533,7 +533,7 @@ def responses_format(response):
 def responses_search( question ):  
     log("<responses_search>")
 
-    provider_name, separator, model_name = RESPONSES_MODEL_ID.partition(".")
+    provider_name, separator, model_name = GENAI_MODEL.partition(".")
     if provider_name == "google":
         role_instructions = "user"
     else:
@@ -542,7 +542,7 @@ def responses_search( question ):
     client = responses_get_client()
 
     response = client.responses.create(
-        model=RESPONSES_MODEL_ID,
+        model=GENAI_MODEL,
         temperature=0.0,
         input=[
             {
