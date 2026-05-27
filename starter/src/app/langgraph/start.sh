@@ -8,5 +8,7 @@ export PATH=~/.local/bin/:$PATH
 # Start LangGraph CompiledStateGraph on port 2024
 source myenv/bin/activate
 cd agent
-langgraph dev --host 0.0.0.0 2>&1 | tee ../langgraph.log
+
+export LOG_COLOR=false
+langgraph dev --no-reload --host 0.0.0.0 2>&1 | tee ../langgraph.log
 

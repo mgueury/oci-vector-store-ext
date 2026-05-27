@@ -13,6 +13,7 @@ langchain_oci
 langchain_community
 langchain_docling 
 langchain_openai
+langchain-oracledb
 oci-openai
 langgraph-cli[inmem]
 langchain_mcp_adapters

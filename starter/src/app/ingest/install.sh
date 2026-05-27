@@ -48,7 +48,7 @@ if [ "$TF_VAR_rag_storage" == "vector_store" ]; then
         python src/create_vector_store.py
         exit_on_error "create_vector_store.py failed"
 
-        . ./resource_env.sh
+        . ./responses_env.sh
         # Store the config in APEX
         export TNS_ADMIN=$HOME/app/db
         $HOME/app/db/sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB <<EOF
