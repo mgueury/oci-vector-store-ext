@@ -726,7 +726,7 @@ def convertGrokImage2Text(value, content=None, path=None):
         metadata = get_metadata_from_resource_id( resourceId )
 
         image_file = download_file( namespace, bucketName, resourceName)     
-        text = shared.generic_chat("describe the image", image_path=image_file, a_model="xai.grok-4", a_region="us-chicago-1")
+        text = shared.generic_chat("describe the image", image_path=image_file, a_model="xai.grok-4.3", a_region="us-chicago-1")
 
         dest_file = getLogDir()+"/"+UNIQUE_ID+".md"        
         with open(dest_file, 'w', encoding='utf-8') as f_out:

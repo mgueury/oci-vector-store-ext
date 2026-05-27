@@ -439,7 +439,8 @@ def responses_delete_file_from_vs( file_id ):
     client = responses_get_client()
     delete_result = client.vector_stores.files.delete(
         vector_store_id=VECTOR_STORE_ID,
-        file_id=file_id
+        file_id=file_id,
+        extra_headers={"OpenAI-Project": PROJECT_OCID}
     )
     client.files.delete(file_id=file_id)
     log( "</responses_delete_file_from_vs>" )
