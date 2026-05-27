@@ -406,8 +406,8 @@ def responses_upload_file( file_path, metadata ):
     log( f"<responses_upload_file> fileExtension: {fileExtension}" )
     if fileExtension.endswith("json"):
         log( f"<responses_upload_file>renaming file: {file_path}" )
-        os.rename(file_path, file_path+".txt")
         file_path2 = file_path + ".txt"
+        os.rename(file_path, file_path2)
         log( f"<responses_upload_file> renaming file: {file_path2}" )
     else:
         file_path2 = file_path   
@@ -423,6 +423,9 @@ def responses_upload_file( file_path, metadata ):
         )
         print(file)
         file_id = file.id
+
+    if fileExtension.endswith("json"):
+        os.rename(file_path2, file_path)
 
     print(file_id)
     create_result = client.vector_stores.files.create(
