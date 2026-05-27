@@ -11,6 +11,7 @@ import mimetypes
 from oci_genai_auth import OciInstancePrincipalAuth
 import httpx
 from openai import OpenAI
+import traceback
 
 
 # -- globals ----------------------------------------------------------------
