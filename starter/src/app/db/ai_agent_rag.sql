@@ -86,7 +86,7 @@ wwv_imp_workspace.create_flow(
  p_id=>wwv_flow.g_flow_id
 ,p_owner=>nvl(wwv_flow_application_install.get_schema,'APEX_APP')
 ,p_name=>nvl(wwv_flow_application_install.get_application_name,'AI_AGENT_VECTOR_STORE')
-,p_alias=>nvl(wwv_flow_application_install.get_application_alias,'AI_AGENT_RAG100')
+,p_alias=>nvl(wwv_flow_application_install.get_application_alias,'AI_AGENT_VECTOR_STORE')
 ,p_page_view_logging=>'YES'
 ,p_page_protection_enabled_y_n=>'Y'
 ,p_checksum_salt=>'46E3F566A5BE0FDF96BC9859212CB7C3A11803443E4EAC74C4B839EAFB478D8E'
