@@ -16,7 +16,7 @@ from oci.object_storage.transfer.constants import MEBIBYTE
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders.text import TextLoader
 from langchain_core.documents import Document
-from langchain_community.vectorstores.oraclevs import OracleVS
+from langchain_oracledb.vectorstores.oraclevs import OracleVS
 from langchain_community.embeddings import OCIGenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_text_splitters import RecursiveCharacterTextSplitter

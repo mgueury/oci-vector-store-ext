@@ -48,6 +48,7 @@ opentelemetry-exporter-otlp-proto-http
 
 # Langgraph
 langchain_oci
+langchain-oracledb
 langchain_community
 langchain_chroma
 langchain_docling 
