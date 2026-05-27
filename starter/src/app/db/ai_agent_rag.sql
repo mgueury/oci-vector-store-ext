@@ -19688,7 +19688,7 @@ wwv_flow_imp_shared.create_install_script(
 '            "vector_store_ids": ["'' || g_vector_store_id || ''"]',
 '          }',
 '        ],',
-'        "tool_choice": "required",',
+'        "tool_choice": "auto",',
 '        "include": [ "file_search_call.results" ]',
 '    }'');',
 '    jo := treat(je AS JSON_OBJECT_T);',
