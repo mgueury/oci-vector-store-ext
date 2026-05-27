@@ -46,8 +46,8 @@ else
        export NLB_IP=$COMPUTE_PUBLIC_IP
        # Using the self sign certificate for the IP
        export ORDS_EXTERNAL_URL="https://${COMPUTE_PUBLIC_IP}/ords"
-
     else 
+       append_tf_env "export APIGW_HOSTNAME=\"$APIGW_HOSTNAME\""
        export BASE_URL="https://${APIGW_HOSTNAME}/${TF_VAR_prefix}"
        export NLB_IP=`jq -r '.resources[] | select(.name=="starter_nlb") | .instances[0].attributes.ip_addresses[] | select(.is_public==true) | .ip_address' $STATE_FILE`
        echo "NLB_IP=$NLB_IP"

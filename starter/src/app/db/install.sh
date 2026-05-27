@@ -121,11 +121,9 @@ EOF
 # Store the config in APEX
 sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB <<EOF
 begin
-  AI_CONFIG_UPDATE( 'agent_endpoint_ocid', '$TF_VAR_agent_endpoint_ocid' );
   AI_CONFIG_UPDATE( 'project_ocid',        '$TF_VAR_project_ocid' );
-  AI_CONFIG_UPDATE( 'vector_store',        '$VECTOR_STORE' );
   AI_CONFIG_UPDATE( 'rag_storage',         '$TF_VAR_rag_storage' );
-  AI_CONFIG_UPDATE( 'genai_model',  '$TF_VAR_genai_model' );  
+  AI_CONFIG_UPDATE( 'genai_model',         '$TF_VAR_genai_model' );  
   AI_CONFIG_UPDATE( 'region',              '$TF_VAR_region' );
   AI_CONFIG_UPDATE( 'compartment_ocid',    '$TF_VAR_compartment_ocid' );
   AI_CONFIG_UPDATE( 'genai_embed_model',   '$TF_VAR_genai_embed_model' );
@@ -133,13 +131,13 @@ begin
   AI_CONFIG_UPDATE( 'bucket_url',          '$BUCKET_URL' );
   AI_CONFIG_UPDATE( 'rag_search_type',     'vector' );
   -- AI_EVAL
-  AI_CONFIG_UPDATE( 'qa_url',              'https://$APIGW_HOSTNAME/$TF_VAR_prefix/langgraph/runs/wait' );
+  AI_CONFIG_UPDATE( 'qa_url',              '$BASE_URL/langgraph/runs/wait' );
   AI_CONFIG_UPDATE( 'genai_meta_model',    '$TF_VAR_genai_meta_model' );
   -- AI_LANGGRAPH
-  AI_CONFIG_UPDATE( 'langgraph_thread_url', 'https://$APIGW_HOSTNAME/$TF_VAR_prefix/langgraph/threads' );
+  AI_CONFIG_UPDATE( 'langgraph_thread_url', '$BASE_URL/langgraph/threads' );
   AI_CONFIG_UPDATE( 'idcs_url', '$IDCS_URL' );
   -- ORCL_DB_SSE
-  -- AI_CONFIG_UPDATE( 'langgraph_startsse_url', 'https://$APIGW_HOSTNAME/$TF_VAR_prefix/orcldbsse/startsse?thread_id=' );
+  -- AI_CONFIG_UPDATE( 'langgraph_startsse_url', '$BASE_URL/orcldbsse/startsse?thread_id=' );
   commit;
 end;
 /
