@@ -64,7 +64,7 @@ begin
     COMMIT;                      
 end;
 /
-@ai_agent_rag.sql
+@ai_agent_vector_store.sql
 /
 begin
     apex_application_install.set_application_id(1002);
@@ -136,8 +136,6 @@ begin
   -- AI_LANGGRAPH
   AI_CONFIG_UPDATE( 'langgraph_thread_url', '$BASE_URL/langgraph/threads' );
   AI_CONFIG_UPDATE( 'idcs_url', '$IDCS_URL' );
-  -- ORCL_DB_SSE
-  -- AI_CONFIG_UPDATE( 'langgraph_startsse_url', '$BASE_URL/orcldbsse/startsse?thread_id=' );
   commit;
 end;
 /
