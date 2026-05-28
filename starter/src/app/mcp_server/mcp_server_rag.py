@@ -71,7 +71,6 @@ def _get_auth_header() -> Optional[str]:
 
 T = TypeVar("T")
 
-
 def tool_guard(fn: Callable[..., T]) -> Callable[..., dict]:
     """
     Convert unexpected exceptions into structured tool errors.
@@ -80,10 +79,13 @@ def tool_guard(fn: Callable[..., T]) -> Callable[..., dict]:
     def wrapper(*args, **kwargs) -> dict:
         try:
             result = fn(*args, **kwargs)
+            shared.log('<tool_guard> OK')
             return _ok(result)
         except (ValueError, TypeError, ValidationError) as e:
+            shared.log('<tool_guard> Invalid parameter '+str(e))
             return _error("Invalid parameter(s)", details=str(e))
         except Exception as e:
+            shared.log('<tool_guard> Error '+str(e))
             return _error("Internal server error", details=str(e))
     return cast(Callable[..., dict], wrapper)
 

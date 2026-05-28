@@ -533,7 +533,7 @@ def responses_format(response):
         "citations": citations_sorted
     }
 
-## -- responses_upload_file --------------------------------------------------
+## -- responses_search --------------------------------------------------
 
 def responses_search( question ):  
     log("<responses_search>")
@@ -549,20 +549,7 @@ def responses_search( question ):
     response = client.responses.create(
         model=GENAI_MODEL,
         temperature=0.0,
-        input=[
-            {
-                # cannot use system if provider is google
-                "role": role_instructions,
-                "content": (
-                    "Answer using only information from the retrieved documents. "
-                    "You may summarize or synthesize information that is explicitly supported by the retrieved text. "
-                    "Do not use outside knowledge. "
-                    "If the retrieved documents do not contain enough information to answer, say exactly: "
-                    "'I don't have sufficient information in the documents.'"
-                ),
-            },
-            {"role": "user", "content": question},
-        ],
+        input=f"Answer using only information from the retrieved documents. You may summarize or synthesize information that is explicitly supported by the retrieved text. Do not use outside knowledge. If the retrieved documents do not contain enough information to answer, say exactly: 'I don't have sufficient information in the documents.'. The question is: f{question}",
         tools=[
             {
                 "type": "file_search",
