@@ -308,6 +308,7 @@ if declare -p | grep -q "__TO_FILL__"; then
     read_ocid TF_VAR_fnapp_ocid "Function Application" ocid1.fnapp
     read_ocid TF_VAR_log_group_ocid "Log Group" ocid1.loggroup
     read_ocid TF_VAR_bastion_ocid "Bastion Instance" ocid1.instance
+    read_ocid TF_VAR_project_ocid "Generative AI Project" ocid1.generativeaiproject
     # ? # read_ocid TF_VAR_vault_secret_authtoken_ocid "Enter your Private Subnet OCID" ocid1.subnet
 
     # -- terraform.tfvars

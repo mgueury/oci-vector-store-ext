@@ -376,9 +376,9 @@ install_ngnix() {
 
     # Default: location /app/ { proxy_pass http://localhost:8080 }
     if [ -f nginx_app.locations ]; then
-        cp nginx_app.locations $TARGET_DIR/nginx_app.locations
-        file_replace_variables $TARGET_DIR/nginx_app.locations
-        sudo cp $TARGET_DIR/nginx_app.locations /etc/nginx/conf.d/.
+        cp nginx_app.locations /tmp/nginx_app.locations
+        file_replace_variables /tmp/nginx_app.locations
+        sudo cp /tmp/nginx_app.locations /etc/nginx/conf.d/.
         if grep -q nginx_app /etc/nginx/nginx.conf; then
             echo "Include nginx_app.locations is already there"
         else

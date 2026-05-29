@@ -35,7 +35,7 @@ if ! grep -q "export LC_CTYPE" $HOME/.bashrc; then
     # Resize the boot volume (if >47GB)
     sudo /usr/libexec/oci-growfs -y
 
-    # Force the ol8_oci_included (sometimes it is deactivated)
+    # Workaround : Force the ol8_oci_included (sometimes it is deactivated)
     sudo dnf config-manager --enable ol8_oci_included
 
     # Build_host = bastion
