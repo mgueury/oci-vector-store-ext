@@ -35,6 +35,9 @@ if ! grep -q "export LC_CTYPE" $HOME/.bashrc; then
     # Resize the boot volume (if >47GB)
     sudo /usr/libexec/oci-growfs -y
 
+    # Force the ol8_oci_included (sometimes it is deactivated)
+    sudo dnf config-manager --enable ol8_oci_included
+
     # Build_host = bastion
     if [ "$TF_VAR_build_host" == "bastion" ]; then 
         # Kubernetes
