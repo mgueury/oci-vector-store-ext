@@ -47,7 +47,6 @@ else
        # Using the self sign certificate for the IP
        export ORDS_EXTERNAL_URL="https://${COMPUTE_PUBLIC_IP}/ords"
     else 
-       append_tf_env "export APIGW_HOSTNAME=\"$APIGW_HOSTNAME\""
        export BASE_URL="https://${APIGW_HOSTNAME}/${TF_VAR_prefix}"
        export NLB_IP=`jq -r '.resources[] | select(.name=="starter_nlb") | .instances[0].attributes.ip_addresses[] | select(.is_public==true) | .ip_address' $STATE_FILE`
        echo "NLB_IP=$NLB_IP"
@@ -66,6 +65,9 @@ else
         append_tf_env "export MCP_SERVER_URL=\"http://localhost:2025/mcp\""
     fi
     export LANGGRAPH_APIKEY="##TF_VAR_db_password##"
+
+    # LibreOffice
+    # export INSTALL_LIBREOFFICE="no"
 
     # Vector Store
     if [ "$TF_VAR_rag_storage" == "vector_store" ]; then
