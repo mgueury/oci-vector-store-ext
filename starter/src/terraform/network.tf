@@ -35,6 +35,11 @@ data "oci_core_subnet" "starter_db_subnet" {
 }
 */
 
+variable "public_ip_filter" {
+  description = "IP Range that can access the public network"
+  default = "0.0.0.0/0"  
+}
+
 # New VCN and Subnets
 locals {
   cidr_vcn = "10.0.0.0/16"
@@ -118,7 +123,18 @@ resource "oci_core_security_list" "starter_security_list" {
 
   ingress_security_rules {
     protocol  = "6" // tcp
-    source    = "0.0.0.0/0"
+    source    = var.public_ip_filter
+    stateless = false
+
+    tcp_options {
+      min = 443
+      max = 443
+    }
+  }  
+
+  ingress_security_rules {
+    protocol  = "6" // tcp
+    source    = local.cidr_vcn
     stateless = false
 
     tcp_options {
@@ -129,7 +145,18 @@ resource "oci_core_security_list" "starter_security_list" {
 
   ingress_security_rules {
     protocol  = "6" // tcp
-    source    = "0.0.0.0/0"
+    source    = var.public_ip_filter
+    stateless = false
+
+    tcp_options {
+      min = 80
+      max = 80
+    }
+  }  
+
+  ingress_security_rules {
+    protocol  = "6" // tcp
+    source    = local.cidr_vcn
     stateless = false
 
     tcp_options {
@@ -138,10 +165,9 @@ resource "oci_core_security_list" "starter_security_list" {
     }
   }
 
-  // XXXXXX 0.0.0.0/0 ??
   ingress_security_rules {
     protocol  = "6" // tcp
-    source    = "0.0.0.0/0"
+    source    = var.public_ip_filter
     stateless = false
 
     tcp_options {
@@ -149,6 +175,17 @@ resource "oci_core_security_list" "starter_security_list" {
       max = 8080
     }
   }  
+
+  ingress_security_rules {
+    protocol  = "6" // tcp
+    source    = local.cidr_vcn
+    stateless = false
+
+    tcp_options {
+      min = 8080
+      max = 8080
+    }
+  }
 
   // ORCL_DB_SEE
   ingress_security_rules {
@@ -272,7 +309,7 @@ resource "oci_core_security_list" "starter_security_list" {
   // LangGraph
   ingress_security_rules {
     protocol  = "6" // tcp
-    source    = "0.0.0.0/0"
+    source    = local.cidr_vcn
     stateless = false
 
     tcp_options {

@@ -7,4 +7,6 @@ cd $SCRIPT_DIR
 # Python 
 install_python
 
+# Langgraph
+sudo firewall-cmd --zone=public --add-port=8081/tcp --permanent
 
