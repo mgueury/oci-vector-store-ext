@@ -5,10 +5,10 @@ export PATH=~/.local/bin/:$PATH
 
 . $HOME/compute/tf_env.sh
 
-# Start LangGraph CompiledStateGraph on port 2024
+# Start LangGraph CompiledStateGraph on port 8080
 source myenv/bin/activate
 cd agent
 
 export LOG_COLOR=false
-langgraph dev --no-reload --host 0.0.0.0 2>&1 | tee ../langgraph.log
+langgraph dev --no-reload --host 0.0.0.0 --port 8080 2>&1 | tee ../langgraph.log
 
