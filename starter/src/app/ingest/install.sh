@@ -50,9 +50,8 @@ if [ "$TF_VAR_rag_storage" == "vector_store" ]; then
     fi
 fi  
 
-# Store it in the Database
+# Store the ID in the Database
 . ./responses_env.sh
-# Store the config in APEX
 export TNS_ADMIN=$HOME/app/db
 HOME/app/db/sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB <<EOF
 begin
