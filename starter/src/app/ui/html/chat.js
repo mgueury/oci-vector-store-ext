@@ -5,10 +5,10 @@ mermaid.initialize({ startOnLoad: false });
 
 // -- Variables ----------------------------------------------------------------- 
 
-let BASE_URL = '/langgraph/server';
+let BASE_URL = 'app';
 let currentBackend = 'LangGraph';
 const backends = [
-    { name: 'LangGraph', baseUrl: '/langgraph/server' }
+    { name: 'LangGraph', baseUrl: 'app' }
 ];
 let currentAgent = 'agent';
 let currentUser = 'customer';
@@ -38,8 +38,10 @@ chatInput.addEventListener('keydown', (e) => {
 });
 function autoGrowTextarea() {
     if (!chatInput) return;
+    const maxHeight = Number.parseFloat(getComputedStyle(chatInput).maxHeight);
     chatInput.style.height = 'auto';
-    chatInput.style.height = `${chatInput.scrollHeight - 36}px`;
+    chatInput.style.height = `${Math.min(chatInput.scrollHeight, maxHeight || chatInput.scrollHeight)}px`;
+    chatInput.style.overflowY = maxHeight && chatInput.scrollHeight > maxHeight ? 'auto' : 'hidden';
 }
 chatInput.addEventListener('input', autoGrowTextarea);
 
@@ -52,15 +54,16 @@ function safeParse(json) {
     catch (e) { return {}; }
 }
 
-async function renderContent(input) {
+async function renderContent(input) 
+{
     const MERMAID_FENCE_RE = /```(?:\s*)mermaid\s*\n([\s\S]*?)\n```/i;
     if (MERMAID_FENCE_RE.test(input)) {
         const m = input.match(/```mermaid\s*([\s\S]*?)\s*```/i);
         const m2 = m[1].trim();
-        const value = await mermaid.render("diagram", m2);
+        const value = await mermaid.render("diagram",m2);
         return value.svg;
     } else {
-        return renderMarkdown(input);
+       return renderMarkdown(input);
     }
 }
 
@@ -77,14 +80,15 @@ function hideSpinner() {
     spinnerContainer.innerHTML = '';
 }
 
-// Remove spinner (when SSE is done)
-function errorSpinner() {
-    spinnerContainer.innerHTML = 'ERROR';
-}
-
 function scrollToBottom() {
-    // Scroll so the anchor div is visible
-    document.getElementById('spinner-container').scrollIntoView({ behavior: "smooth" });
+    if (!messagesEl) return;
+
+    const scroll = () => {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    };
+
+    scroll();
+    requestAnimationFrame(scroll);
 }
 
 function renderJsTable(data) {
@@ -117,20 +121,21 @@ async function renderMessage(msgObj) {
     let innerHTML = '';
     // Human message
     if (msgObj.type === 'human') {
-        innerHTML = `<div class="bubble"><div class="bubble-content"><div class="meta">You</div>${renderMarkdown(msgObj.content)}</div></div>`;
-    } else if (msgObj.type === 'ai') {
-        if (msgObj.content) {
-            innerHTML = `<div class="bubble"><div class="bubble-content"><div class="meta">AI</div>${await renderContent(msgObj.content)}</div></div>`;
-        } else if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
-            const toolNames = msgObj.tool_calls.map(t => t.name).join(' - ');
-            let bubble = `<div class="bubble"><div class="meta">Tool Calls - ${toolNames}</div>`;
-            let tools = msgObj.tool_calls.map(t =>
-                `<tr><td>${t.name}</td><td>${JSON.stringify(t.args)}</td></tr>`
-            ).join('');
-            bubble += `<table class='tools-table'><thead><tr><th>Name</th><th>Arguments</th></tr></thead><tbody>${tools}</tbody></table>`;
-            innerHTML = bubble;
-        }
-    } else if (msgObj.type === 'tool') {
+        innerHTML = `<div class="bubble"><div class="meta">You</div>${renderMarkdown(msgObj.content)}</div>`;
+        } else if (msgObj.type === 'ai') {
+            if (msgObj.content) {
+                innerHTML = `<div class="bubble"><div class="meta">AI</div>${await renderContent(msgObj.content)}</div>`;
+            } else if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
+                const toolNames = msgObj.tool_calls.map(t => t.name).join(' - ');
+                let bubble = `<div class="bubble"><div class="meta">Tool Calls - ${toolNames}</div>`;
+                let tools = msgObj.tool_calls.map(t =>
+                    `<tr><td>${t.name}</td><td>${JSON.stringify(t.args)}</td></tr>`
+                ).join('');
+                bubble += `<table class='tools-table'><thead><tr><th>Name</th><th>Arguments</th></tr></thead><tbody>${tools}</tbody></table>`;
+                bubble += "</div>";
+                innerHTML = bubble;
+            }
+        } else if (msgObj.type === 'tool') {
         let data = msgObj.artifact?.structured_content ?? {};
         let bubble = "<div class='bubble'><div class='meta'>Tool - " + msgObj.name + "</div>";
         if (data?.response) {
@@ -154,8 +159,8 @@ function startSSE(reqBody, onMessage, onDone) {
     // SSE with POST is non-standard. We'll use fetch + stream reader
     fetch(url, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
+        headers: { 
+            "Content-Type": "application/json", 
             "Authorization": `User ${currentUser}`,
             "X-CSRF-TOKEN": csrfToken
         },
@@ -163,7 +168,7 @@ function startSSE(reqBody, onMessage, onDone) {
         body: JSON.stringify(reqBody)
     }).then(async response => {
         if (!response.ok || !response.body) {
-            errorSpinner();
+            hideSpinner();
             onMessage({ type: "ai", content: "Network/server error." });
             if (onDone) onDone();
             return;
@@ -185,6 +190,7 @@ function startSSE(reqBody, onMessage, onDone) {
                     if (match) {
                         let data = match[1];
                         let json = safeParse(data);
+                        console.log("SSE data:", json); // Debug log
                         if (json?.messages) {
                             for (const id in json.messages) {
                                 let nid = Number(id)
@@ -193,6 +199,18 @@ function startSSE(reqBody, onMessage, onDone) {
                                     last_message_id = nid
                                 }
                             }
+                        } else if (json?.error || json?.ToolException) {
+                            // Handle tool errors or LangGraph errors
+                            let errorMsg = json.error || json.ToolException || json.message || "Unknown error occurred";
+                            if (json.status === "tool_error") {
+                                errorMsg = `Tool Error: ${errorMsg}. Please check the logs for details or try rephrasing your request.`;
+                            } else {
+                                errorMsg = `Error: ${errorMsg}. Please check the logs.`;
+                            }
+                            onMessage({
+                                type: "ai",
+                                content: `**Error occurred** - ${errorMsg}`
+                            });
                         }
                     }
                 }
@@ -201,7 +219,7 @@ function startSSE(reqBody, onMessage, onDone) {
         hideSpinner();
         if (onDone) onDone();
     }).catch(e => {
-        errorSpinner();
+        hideSpinner();
         onMessage({ type: "ai", content: "Connection error." });
         if (onDone) onDone();
     });
@@ -213,21 +231,28 @@ async function getThreadId() {
         const resp = await fetch(url, {
             method: "POST",
             body: "{}",
-            headers: {
+            headers: { 
                 "Authorization": `User ${currentUser}`,
                 "X-CSRF-TOKEN": csrfToken
             },
             credentials: 'include'
         });
+        if (!resp.ok) {
+            throw new Error(`Backend responded with ${resp.status}`);
+        }
+        const contentType = resp.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Backend did not return JSON');
+        }
         const data = await resp.json();
         return data.thread_id;
     } catch (e) {
-        alert("Failed to connect to chat server.");
+        console.warn("Failed to connect to chat server.", e);
     }
 }
 
 async function addMessage(msgObj) {
-    renderMessage(msgObj);
+    await renderMessage(msgObj);
 }
 
 chatForm.addEventListener('submit', async function (e) {
@@ -237,6 +262,7 @@ chatForm.addEventListener('submit', async function (e) {
 
     addMessage({ type: "human", content: msg });
     chatInput.value = '';
+    autoGrowTextarea();
 
     const reqBody = {
         "assistant_id": "agent",
@@ -271,23 +297,35 @@ reset.addEventListener('click', () => {
     window.location.reload();
 });
 
-// -- Hamburger menu logic ------------------------------------------
+// -- Optional settings menu logic -----------------------------------
 const hamburger = document.querySelector('.hamburger');
 const nav = document.getElementById('agentMenu');
-hamburger.addEventListener('click', () => {
-    const isOpen = nav.classList.toggle('open');
-    hamburger.setAttribute('aria-expanded', isOpen);
-});
-document.addEventListener('keydown', function (e) {
-    if (e.key === "Escape") {
+
+function closeSettingsPanel() {
+    if (nav) {
         nav.classList.remove('open');
+    }
+    if (hamburger) {
         hamburger.setAttribute('aria-expanded', 'false');
     }
-});
+}
+
+if (hamburger && nav) {
+    hamburger.addEventListener('click', () => {
+        const isOpen = nav.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === "Escape") {
+            closeSettingsPanel();
+        }
+    });
+}
 
 // Users section
 function renderBackendList() {
     const backendList = document.getElementById('backendList');
+    if (!backendList) return;
     backendList.innerHTML = '';
     backends.forEach(backend => {
         const li = document.createElement('li');
@@ -301,8 +339,9 @@ function renderBackendList() {
 
 function renderUserList() {
     const userList = document.getElementById('userList');
+    if (!userList) return;
     userList.innerHTML = '';
-    if (csrfToken == "") {
+    if( csrfToken=="" ) {
         users.forEach(user => {
             const li = document.createElement('li');
             li.textContent = user;
@@ -314,7 +353,7 @@ function renderUserList() {
     } else {
         const li = document.createElement('li');
         li.textContent = "Logout";
-        li.addEventListener('click', () => {
+        li.addEventListener('click', () => { 
             /* window.location.href = '/openid/logout?postLogoutUrl='+window.location.origin+'/openid/chat.html'; */
             window.location.href = '/openid/logout?postLogoutUrl=https://www.oracle.com';
         });
@@ -343,6 +382,7 @@ async function fetchAgents() {
 
 function renderAgentList(agents) {
     const agentList = document.getElementById('agentList');
+    if (!agentList) return;
     agentList.innerHTML = '';
     agents.forEach(agent => {
         const li = document.createElement('li');
@@ -356,7 +396,10 @@ function renderAgentList(agents) {
 
 // Updating display
 function updateDisplay() {
-    document.getElementById('currentDisplay').textContent = `Backend: ${currentBackend} - Agent: ${currentAgent} - User: ${currentUser}`;
+    const currentDisplay = document.getElementById('currentDisplay');
+    if (currentDisplay) {
+        currentDisplay.textContent = `Backend: ${currentBackend} - Agent: ${currentAgent} - User: ${currentUser}`;
+    }
 }
 
 async function setCurrentBackend(backendName) {
@@ -370,16 +413,18 @@ async function setCurrentBackend(backendName) {
     thread_id = await getThreadId();
     last_message_id = 0;
     if (!thread_id) {
-        messagesEl.innerHTML = '<div class="message ai">Error: could not get thread_id from backend.</div>';
+        messagesEl.innerHTML = '';
+        await addMessage({ type: "ai", content: "The concierge service is currently unavailable." });
         chatInput.disabled = true;
     } else {
         chatInput.disabled = false;
     }
 
     updateDisplay();
-    nav.classList.remove('open');
-    hamburger.setAttribute('aria-expanded', 'false');
-    fetchAgents().then(renderAgentList);
+    closeSettingsPanel();
+    if (document.getElementById('agentList')) {
+        fetchAgents().then(renderAgentList);
+    }
     renderUserList();
     renderBackendList();
 }
@@ -387,19 +432,21 @@ async function setCurrentBackend(backendName) {
 function setCurrentAgent(agentName) {
     currentAgent = agentName;
     updateDisplay();
-    nav.classList.remove('open');
-    hamburger.setAttribute('aria-expanded', 'false');
+    closeSettingsPanel();
     // Re-render to update aria-current
-    fetchAgents().then(renderAgentList);
+    if (document.getElementById('agentList')) {
+        fetchAgents().then(renderAgentList);
+    }
     renderUserList();
 }
 function setCurrentUser(user) {
     currentUser = user;
     updateDisplay();
-    nav.classList.remove('open');
-    hamburger.setAttribute('aria-expanded', 'false');
+    closeSettingsPanel();
     // Re-render to update aria-current
-    fetchAgents().then(renderAgentList);
+    if (document.getElementById('agentList')) {
+        fetchAgents().then(renderAgentList);
+    }
     renderUserList();
 }
 
@@ -411,7 +458,7 @@ async function fetchUserInfo() {
     });
     if (!response.ok) throw new Error('Failed to fetch UserInfo');
     csrfToken = response.headers.get('x-csrf-token');
-    console.log(`Found x-csrf-token ${csrfToken}`)
+    console.log( `Found x-csrf-token ${csrfToken}` )    
     let data = await response.json();
     currentUser = data.sub;
     updateDisplay();
@@ -421,6 +468,7 @@ let currentLang = 'en';
 let recognition = null;
 
 function initRecognition() {
+    if (!micButton) return;
     if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
         micButton.style.display = 'none';
         return;
@@ -434,7 +482,7 @@ function initRecognition() {
 
     recognition.onstart = () => {
         micButton.classList.add('recording');
-        chatInput.placeholder = getPlaceholder();
+        chatInput.placeholder = getListeningPlaceholder();
     };
 
     recognition.onresult = (event) => {
@@ -448,12 +496,12 @@ function initRecognition() {
     recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         micButton.classList.remove('recording');
-        chatInput.placeholder = getPlaceholder();
+        chatInput.placeholder = getInputPlaceholder();
     };
 
     recognition.onend = () => {
         micButton.classList.remove('recording');
-        chatInput.placeholder = getPlaceholder();
+        chatInput.placeholder = getInputPlaceholder();
     };
 }
 
@@ -461,37 +509,44 @@ function getLangCode(lang) {
     return lang === 'fr' ? 'fr-FR' : 'en-US';
 }
 
-function getPlaceholder() {
+function getInputPlaceholder() {
+    return currentLang === 'fr' ? 'Tapez votre message...' : 'Type your message...';
+}
+
+function getListeningPlaceholder() {
     return currentLang === 'fr' ? 'Écoute...' : 'Listening...';
 }
 
 function updateLanguage(lang) {
     currentLang = lang;
     document.documentElement.lang = lang;
-    document.querySelector('h2').textContent = lang === 'fr'
-        ? 'Comment puis-je vous aider ?'
-        : 'How can I help ?';
-    chatInput.placeholder = lang === 'fr' ? 'Tapez votre message...' : 'Type your message...';
+    document
+    .querySelector('h2').textContent = lang === 'fr' 
+        ? 'Puis-je vous aider?'
+        : 'How may I help?';
+    chatInput.placeholder = getInputPlaceholder();
     if (recognition) {
         recognition.lang = getLangCode(lang);
     }
 
-    const languageItems = document.querySelectorAll('#languageList li');
+    const languageItems = document.querySelectorAll('#languageList [data-lang]');
     languageItems.forEach((item) => {
         item.setAttribute('aria-current', item.dataset.lang === lang ? 'true' : 'false');
     });
 }
 
-micButton.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (recognition) {
-        recognition.start();
-    }
-});
+if (micButton) {
+    micButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (recognition) {
+            recognition.start();
+        }
+    });
+}
 
-// Language selector list in menu
+// Language selector
 document.addEventListener('DOMContentLoaded', () => {
-    const languageItems = document.querySelectorAll('#languageList li');
+    const languageItems = document.querySelectorAll('#languageList [data-lang]');
     languageItems.forEach((item) => {
         item.addEventListener('click', () => {
             updateLanguage(item.dataset.lang);
@@ -505,21 +560,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 (async function init() {
     if (window.location.pathname.startsWith('/openid')) {
-        await fetchUserInfo();
-    }
-    console.log(`before init x-csrf-token ${csrfToken}`);
+        await fetchUserInfo(); 
+    }            
+    console.log( `before init x-csrf-token ${csrfToken}` );
     thread_id = await getThreadId();
     last_message_id = 0;
     if (!thread_id) {
-        messagesEl.innerHTML = '<div class="message ai">Error: could not get thread_id from backend.</div>';
+        messagesEl.innerHTML = '';
+        await addMessage({ type: "ai", content: "The service is currently unavailable." });
         chatInput.disabled = true;
     }
     initRecognition();
     renderBackendList();
     renderUserList();
-    fetchAgents()
-        .then(renderAgentList)
-        .catch(error => alert("Could not load agents: " + error));
+    if (document.getElementById('agentList')) {
+        fetchAgents()
+            .then(renderAgentList)
+            .catch(error => console.error("Could not load agents:", error));
+    }
     updateDisplay();
 })();
-
