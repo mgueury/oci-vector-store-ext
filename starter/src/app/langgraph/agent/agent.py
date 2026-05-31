@@ -161,6 +161,7 @@ prompt_sr = """You are a support agent.
             
             REFERENCES:
             - When you answer always give the list of document on which you based your response. Give this in a table format. 2 columns.
+            - Show only the references that were used to answer the question.
             - One line for each reference found in 
                - For the tool search. Give the document path and content.
                - For the tool find_service_request. Give the link to the SR and the question.   

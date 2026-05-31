@@ -46,14 +46,14 @@ if [ "$TF_VAR_rag_storage" == "vector_store" ]; then
         echo "Vector Store"
         source myenv/bin/activate
         python src/create_vector_store.py
-        exit_on_error "create_vector_store.py failed"
+        exit_on_error "create_vector_store.py"
     fi
 fi  
 
 # Store the ID in the Database
 . ./responses_env.sh
 export TNS_ADMIN=$HOME/app/db
-HOME/app/db/sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB <<EOF
+$HOME/app/db/sqlcl/bin/sql APEX_APP/$DB_PASSWORD@DB <<EOF
 begin
     AI_CONFIG_UPDATE( 'vector_store_id', '$VECTOR_STORE_ID' );
 end;
