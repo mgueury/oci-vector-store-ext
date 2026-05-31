@@ -71,6 +71,105 @@ async function renderContent(input)
 function renderMarkdown(md) {
     return marked.parse(md || "");
 }
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+let toolDialog = null;
+
+function ensureToolDialog() {
+    if (toolDialog) return toolDialog;
+
+    toolDialog = document.createElement('dialog');
+    toolDialog.className = 'tool-dialog';
+    toolDialog.innerHTML = `
+        <form method="dialog" class="tool-dialog-panel">
+            <button type="submit" class="tool-dialog-close" aria-label="Close dialog" title="Close">&times;</button>
+            <div class="tool-dialog-body"></div>
+        </form>
+    `;
+    toolDialog.addEventListener('click', (event) => {
+        if (event.target === toolDialog) {
+            toolDialog.close();
+        }
+    });
+    document.body.appendChild(toolDialog);
+    return toolDialog;
+}
+
+function openToolDialog(bodyHtml) {
+    const dialog = ensureToolDialog();
+    dialog.querySelector('.tool-dialog-body').innerHTML = bodyHtml;
+    if (dialog.open) {
+        dialog.close();
+    }
+    if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else {
+        dialog.setAttribute('open', '');
+    }
+}
+
+function renderJsonBody(value, emptyText) {
+    if (value === undefined || value === null || value === '') {
+        return `<em>${emptyText}</em>`;
+    }
+    if (typeof value === 'string') {
+        return `<pre>${escapeHtml(value)}</pre>`;
+    }
+    const json = JSON.stringify(value, null, 2);
+    return `<pre>${escapeHtml(json ?? String(value))}</pre>`;
+}
+
+function renderToolCallBody(toolCall) {
+    return renderJsonBody(toolCall.args, '(No arguments)');
+}
+
+function renderToolResponseBody(msgObj) {
+    const data = msgObj.artifact?.structured_content ?? {};
+    const body = [];
+
+    if (data?.response) {
+        body.push(renderMarkdown(data.response));
+    }
+    if (data?.result) {
+        body.push(renderJsTable(data.result));
+    }
+    if (body.length > 0) {
+        return body.join('');
+    }
+    if (msgObj.content) {
+        return renderMarkdown(msgObj.content);
+    }
+    if (Object.keys(data).length === 0) {
+        return '<em>(No response body)</em>';
+    }
+    return renderJsonBody(data, '(No response body)');
+}
+
+function createToolButton(label, bodyHtml) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'tool-event-button';
+    button.textContent = label;
+    button.addEventListener('click', () => openToolDialog(bodyHtml));
+    return button;
+}
+
+function renderToolEventLine(el, buttons) {
+    el.classList.add('tool-event');
+    const line = document.createElement('div');
+    line.className = 'tool-event-line';
+    buttons.forEach(button => line.appendChild(button));
+    el.appendChild(line);
+}
+
 // Add or move spinner below last message (show while waiting for SSE)
 function showSpinner() {
     spinnerContainer.innerHTML = `<div id="spinner"><div class="pulse-dot"></div></div>`;
@@ -117,38 +216,30 @@ function renderJsTable(data) {
 
 async function renderMessage(msgObj) {
     const el = document.createElement('div');
+    const msgType = msgObj.type || 'ai';
     el.classList.add('message');
-    el.classList.add(msgObj.type || 'ai');
+    el.classList.add(msgType);
     let innerHTML = '';
     // Human message
-    if (msgObj.type === 'human') {
+    if (msgType === 'human') {
         innerHTML = `<div class="bubble"><div class="meta">You</div>${renderMarkdown(msgObj.content)}</div>`;
-        } else if (msgObj.type === 'ai') {
-            if (msgObj.content) {
-                innerHTML = `<div class="bubble"><div class="meta">AI</div>${await renderContent(msgObj.content)}</div>`;
-            } else if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
-                const toolNames = msgObj.tool_calls.map(t => t.name).join(' - ');
-                let bubble = `<div class="bubble"><div class="meta">Tool Calls - ${toolNames}</div>`;
-                let tools = msgObj.tool_calls.map(t =>
-                    `<tr><td>${t.name}</td><td>${JSON.stringify(t.args)}</td></tr>`
-                ).join('');
-                bubble += `<table class='tools-table'><thead><tr><th>Name</th><th>Arguments</th></tr></thead><tbody>${tools}</tbody></table>`;
-                bubble += "</div>";
-                innerHTML = bubble;
-            }
-        } else if (msgObj.type === 'tool') {
-        let data = msgObj.artifact?.structured_content ?? {};
-        let bubble = "<div class='bubble'><div class='meta'>Tool - " + msgObj.name + "</div>";
-        if (data?.response) {
-            bubble += renderMarkdown(data.response);
+    } else if (msgType === 'ai') {
+        if (msgObj.content) {
+            innerHTML = `<div class="bubble"><div class="meta">AI</div>${await renderContent(msgObj.content)}</div>`;
+        } else if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
+            const buttons = msgObj.tool_calls.map(toolCall =>
+                createToolButton(`Call: ${toolCall.name || 'tool'}`, renderToolCallBody(toolCall))
+            );
+            renderToolEventLine(el, buttons);
         }
-        if (data?.result) {
-            bubble += renderJsTable(data.result);
-        }
-        bubble += "</div>";
-        innerHTML = bubble;
+    } else if (msgType === 'tool') {
+        renderToolEventLine(el, [
+            createToolButton(`Response: ${msgObj.name || 'tool'}`, renderToolResponseBody(msgObj))
+        ]);
     }
-    el.innerHTML = innerHTML;
+    if (innerHTML) {
+        el.innerHTML = innerHTML;
+    }
     messagesEl.appendChild(el);
     scrollToBottom();
 }

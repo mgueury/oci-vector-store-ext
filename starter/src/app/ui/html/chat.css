@@ -15,6 +15,10 @@
     box-sizing: border-box;
 }
 
+a {
+    color: #2A2;
+}
+
 html {
     min-height: 100%;
     scroll-behavior: smooth;
@@ -319,36 +323,130 @@ h2 {
     max-width: min(78%, 780px);
 }
 
-.tool-calls {
-    margin-top: 8px;
-    padding: 10px;
-    border: 1px solid rgba(24, 61, 52, .15);
-    border-radius: 6px;
-    background: var(--green-soft);
-    font-size: .95em;
+.message.tool-event {
+    display: inline-flex;
+    max-width: 100%;
+    margin: 0 8px 10px 0;
+    vertical-align: top;
 }
 
-.bubble .tools-table {
-    display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    z-index: 100;
-    width: min(600px, 82vw);
-    min-width: min(400px, 82vw);
-    padding: 12px;
+.tool-event-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--brass) transparent;
+}
+
+.tool-event-button {
+    min-height: 32px;
+    max-width: min(260px, 70vw);
+    padding: 6px 10px;
+    border: 1px solid rgba(24, 61, 52, .2);
+    border-radius: 6px;
+    background: var(--brass);
+    color: var(--green-soft);
+    box-shadow: 0 8px 18px rgba(23, 16, 10, .07);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tool-event-button:hover {
+    border-color: rgba(169, 124, 67, .45);
+    background: #fffaf0;
+    color: var(--ink);
+}
+
+.tool-dialog {
+    width: min(760px, calc(100vw - 32px));
+    max-height: min(78vh, 720px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+}
+
+.tool-dialog::backdrop {
+    background: rgba(22, 17, 13, .48);
+}
+
+.tool-dialog-panel {
+    position: relative;
+    max-height: inherit;
+    margin: 0;
+    padding: 22px;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #fffaf0;
-    box-shadow: 0 18px 45px rgba(23, 16, 10, .2);
-    font-size: .9em;
+    box-shadow: var(--shadow);
+    overflow: auto;
 }
 
-.bubble:hover .tools-table {
-    display: block;
+.tool-dialog-panel .tool-dialog-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    min-height: 0;
+    height: 22px;
+    padding: 0;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff9ee;
+    font-size: .95rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 6px 14px rgba(23, 16, 10, .18);
+    transform: none;
 }
 
-.bubble table {
+.tool-dialog-panel .tool-dialog-close:hover {
+    border-color: var(--brass);
+    background: var(--ink);
+    color: #fff9ee;
+    transform: none;
+}
+
+.tool-dialog-body {
+    max-height: calc(78vh - 44px);
+    padding-right: 32px;
+    overflow: auto;
+    line-height: 1.55;
+}
+
+.tool-dialog-body p:first-child {
+    margin-top: 0;
+}
+
+.tool-dialog-body p:last-child {
+    margin-bottom: 0;
+}
+
+.tool-dialog-body pre {
+    margin: 0;
+    padding: 14px;
+    border: 1px solid rgba(73, 56, 39, .14);
+    border-radius: 6px;
+    background: rgba(241, 231, 214, .62);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.bubble table,
+.tool-dialog-body table {
     width: 100%;
     max-width: 100%;
     margin-top: 10px;
@@ -362,23 +460,28 @@ h2 {
 }
 
 .bubble th,
-.bubble td {
+.bubble td,
+.tool-dialog-body th,
+.tool-dialog-body td {
     padding: .56em .7em;
     border: 1px solid rgba(73, 56, 39, .14);
     text-align: left;
 }
 
-.bubble th {
+.bubble th,
+.tool-dialog-body th {
     background: rgba(169, 124, 67, .12);
     font-weight: 800;
 }
 
-.bubble td {
+.bubble td,
+.tool-dialog-body td {
     overflow-wrap: anywhere;
     white-space: normal;
 }
 
-.bubble tr:hover td {
+.bubble tr:hover td,
+.tool-dialog-body tr:hover td {
     background: rgba(230, 239, 233, .72);
 }
 
