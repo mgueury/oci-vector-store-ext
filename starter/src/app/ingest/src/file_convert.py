@@ -630,7 +630,6 @@ def convertUpload(value, content=None, path=None, originalResourceName=None):
             metadata["originalResourceName"] = originalResourceName 
 
         file_name = getLogDir()+"/"+resourceName
-        log(f"<convertUpload>file_name={file_name}")
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
         if not content:
             contentType = value["contentType"]
@@ -639,9 +638,11 @@ def convertUpload(value, content=None, path=None, originalResourceName=None):
                 for chunk in resp.data.raw.stream(1024 * 1024, decode_content=False):
                     f.write(chunk)
         else:
+            file_name = f"${file_name}.txt"
             contentType = "text/html"
             with open(file_name, 'w') as f:
                 f.write(content)
+        log(f"<convertUpload>file_name={file_name}")
 
         rag_storage.upload_file( value=value, object_name=resourceGenAI, file_path=file_name, content_type=contentType, metadata=metadata)
         os.remove( file_name )
