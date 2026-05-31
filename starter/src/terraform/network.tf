@@ -143,6 +143,18 @@ resource "oci_core_security_list" "starter_security_list" {
     }
   }
 
+  # Connection from the nat_gateway IP. (For ex: to allow crawling of the website)
+  ingress_security_rules {
+    protocol  = "6" // tcp
+    source    = "${oci_core_nat_gateway.starter_nat_gateway.nat_ip}/32"
+    stateless = false
+    tcp_options {
+      min = 443
+      max = 443
+    }
+  }
+
+  # Connection from the public_ip_filter (IP given by the user, whole internet, or laptop IP)
   ingress_security_rules {
     protocol  = "6" // tcp
     source    = var.public_ip_filter
