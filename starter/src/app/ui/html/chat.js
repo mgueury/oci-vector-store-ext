@@ -17,6 +17,7 @@ const users = ['employee', 'customer'];
 let thread_id = null;
 let last_message_id = -1;
 const messagesEl = document.getElementById('messages');
+const chatContainer = document.getElementById('chat-container');
 const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
 const spinnerContainer = document.getElementById('spinner-container');
@@ -81,10 +82,10 @@ function hideSpinner() {
 }
 
 function scrollToBottom() {
-    if (!messagesEl) return;
+    if (!chatContainer) return;
 
     const scroll = () => {
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
     };
 
     scroll();
