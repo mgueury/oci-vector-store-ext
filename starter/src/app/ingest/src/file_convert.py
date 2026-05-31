@@ -638,7 +638,7 @@ def convertUpload(value, content=None, path=None, originalResourceName=None):
                 for chunk in resp.data.raw.stream(1024 * 1024, decode_content=False):
                     f.write(chunk)
         else:
-            file_name = f"${file_name}.txt"
+            file_name = f"{file_name}.txt"
             contentType = "text/html"
             with open(file_name, 'w') as f:
                 f.write(content)
