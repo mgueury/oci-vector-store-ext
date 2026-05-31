@@ -607,3 +607,33 @@ build_rsync() {
     fi    
 }
 export -f build_rsync
+
+# -- livelab_oci_config ------------------------------------------------------------
+# Create a OCI Config for LiveLab (that does not support instance principal)
+livelab_oci_config()
+{
+   if [ "$LIVELABS" != "" ]; then
+     mkdir -p $HOME/.oci
+
+     # OCI Config file
+     cat > $HOME/.oci/config << EOF
+[DEFAULT]
+user=$TF_VAR_current_user_ocid
+fingerprint=$FINGERPRINT
+tenancy=$TF_VAR_tenancy_ocid
+region=$TF_VAR_region
+key_file=/home/opc/.oci/oci_api_key.pem
+EOF
+     echo "livelab_oci_config: .oci/config created"
+
+     # oci_api_key.pem
+     cat > $HOME/.oci/oci_api_key.pem << EOF
+$OCI_API_KEY_PEM
+OCI_API_KEY
+
+EOF
+    chmod 600 $HOME/.oci/config
+    chmod 600 $HOME/.oci/oci_api_key.pem
+  fi
+}
+export -f livelab_oci_config
