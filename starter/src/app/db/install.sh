@@ -23,6 +23,34 @@ grant execute on CTX_DDL to APEX_APP;
 grant execute on DBMS_SCHEDULER to APEX_APP;
 grant create any job to APEX_APP;
 /
+-- Sometimes the DB is still in creation phase. It is better to wait before to install.
+DECLARE
+    l_invalid_count NUMBER;
+    l_attempts      NUMBER := 0;
+BEGIN
+    LOOP
+        SELECT COUNT(*)
+        INTO l_invalid_count
+        FROM dba_objects
+        WHERE status = 'INVALID';
+
+        DBMS_OUTPUT.PUT_LINE(
+            TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') ||
+            ' - Invalid objects: ' || l_invalid_count
+        );
+
+        EXIT WHEN l_invalid_count = 0;
+        EXIT WHEN l_attempts >= 6;
+        l_attempts := l_attempts + 1;
+        DBMS_LOCK.SLEEP(5); -- wait 5 seconds
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE(
+        'Continuing after ' || l_attempts || ' wait(s). Final invalid count: ' || l_invalid_count
+    );
+    -- Continue with the rest of your processing here
+END;
+/
 -- Work-around for ADB SSO bug
 begin
   apex_instance_admin.set_parameter(
