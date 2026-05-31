@@ -24,6 +24,8 @@ grant execute on DBMS_SCHEDULER to APEX_APP;
 grant create any job to APEX_APP;
 /
 -- Sometimes the DB is still in creation phase. It is better to wait before to install.
+set serveroutput on
+
 DECLARE
     l_invalid_count NUMBER;
     l_attempts      NUMBER := 0;
