@@ -67,7 +67,7 @@ else
     export LANGGRAPH_APIKEY="##TF_VAR_db_password##"
 
     # LibreOffice
-    # append_tf_env "export INSTALL_LIBREOFFICE=\"no\""
+    append_tf_env "export INSTALL_LIBREOFFICE=\"no\""
 
     # Vector Store
     if [ "$TF_VAR_rag_storage" == "vector_store" ]; then
