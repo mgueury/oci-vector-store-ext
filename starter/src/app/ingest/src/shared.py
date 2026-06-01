@@ -419,7 +419,7 @@ def responses_upload_file( file_path, metadata ):
         file = client.files.create(
             file=f,
             purpose="user_data",
-            # extra_headers={"OpenAI-Project": PROJECT_OCID},
+            extra_headers={"OpenAI-Project": PROJECT_OCID},
         )
         print(file)
         file_id = file.id
