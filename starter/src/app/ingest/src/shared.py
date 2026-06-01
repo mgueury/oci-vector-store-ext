@@ -384,6 +384,7 @@ def responses_get_client():
     client = OpenAI(
         base_url=f"https://inference.generativeai.{REGION}.oci.oraclecloud.com/20231130/openai/v1",
         api_key="unused",
+        project=PROJECT_OCID,        
         http_client=httpx.Client(
             auth=OciInstancePrincipalAuth(),
             headers={
