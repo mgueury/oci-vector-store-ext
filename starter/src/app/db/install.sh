@@ -30,6 +30,7 @@ DECLARE
     l_invalid_count NUMBER;
     l_attempts      NUMBER := 0;
 BEGIN
+    DBMS_OUTPUT.PUT_LINE('Waiting in case in Invalid Objects in a new database');
     LOOP
         SELECT COUNT(*)
         INTO l_invalid_count
@@ -50,6 +51,12 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE(
         'Continuing after ' || l_attempts || ' wait(s). Final invalid count: ' || l_invalid_count
     );
+    IF l_invalid_count>0 THEN
+        FOR REC IN SELECT object_owner, object_name from dba_objects WHERE status = 'INVALID' and row_num<10 LOOP
+            DBMS_OUTPUT.PUT_LINE('- ' || rec.object_owner || '.' || rec.object_name);
+        END LOOP;
+        DBMS_OUTPUT.PUT_LINE('...');
+    END IF;
     -- Continue with the rest of your processing here
 END;
 /

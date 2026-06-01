@@ -419,7 +419,7 @@ def responses_upload_file( file_path, metadata ):
         file = client.files.create(
             file=f,
             purpose="user_data",
-            extra_headers={"OpenAI-Project": PROJECT_OCID},
+            # extra_headers={"OpenAI-Project": PROJECT_OCID},
         )
         print(file)
         file_id = file.id
@@ -439,14 +439,18 @@ def responses_upload_file( file_path, metadata ):
 ## -- responses_delete_file_from_vs --------------------------------------------------
 
 def responses_delete_file_from_vs( file_id ):  
-    log(f"<responses_delete_file_from_vs> {file_id}")
-    client = responses_get_client()
-    delete_result = client.vector_stores.files.delete(
-        vector_store_id=VECTOR_STORE_ID,
-        file_id=file_id,
-        extra_headers={"OpenAI-Project": PROJECT_OCID}
-    )
-    client.files.delete(file_id=file_id)
+    log(f"<responses_delete_file_from_vs> {VECTOR_STORE_ID} / {file_id} / {PROJECT_OCID}")
+    try:
+        client = responses_get_client()
+        delete_result = client.vector_stores.files.delete(
+            vector_store_id=VECTOR_STORE_ID,
+            file_id=file_id
+        )
+        client.files.delete(file_id=file_id)
+        log(delete_result)
+    except:
+        log("\u270B <responses_delete_file_from_vs> Exception") 
+        log(traceback.format_exc())      
     log( "</responses_delete_file_from_vs>" )
 
 ## -- responses_format --------------------------------------------------
