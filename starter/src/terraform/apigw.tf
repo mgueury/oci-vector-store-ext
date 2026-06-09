@@ -176,7 +176,7 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment_chat5" {
   compartment_id = local.lz_app_cmp_ocid
   display_name   = "${var.prefix}-chat5"
   gateway_id     = local.apigw_ocid
-  path_prefix    = "/root"
+  path_prefix    = "/settings"
   specification {
     # Route the COMPUTE_PRIVATE_IP   
     routes {
@@ -184,7 +184,7 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment_chat5" {
       methods = [ "ANY" ]
       backend {
         type = "HTTP_BACKEND"
-        url    = "http://${local.apigw_dest_private_ip}:8082/$${request.path[pathname]}"
+        url    = "http://${local.apigw_dest_private_ip}:8082/settings/$${request.path[pathname]}"
         connect_timeout_in_seconds = 60
         read_timeout_in_seconds = 120
         send_timeout_in_seconds = 120                    
