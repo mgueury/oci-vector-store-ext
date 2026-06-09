@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR
+
+# Install last version of NodeJS
+# https://yum.oracle.com/oracle-linux-nodejs.html#InstallingNodeOnOL8
+sudo dnf module enable -y nodejs:20
+sudo dnf module install -y nodejs
+
+cd files
+npm install
+
+sudo firewall-cmd --zone=public --add-port=8082/tcp --permanent

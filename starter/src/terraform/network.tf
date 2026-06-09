@@ -211,6 +211,17 @@ resource "oci_core_security_list" "starter_security_list" {
     }
   }  
 
+  ingress_security_rules {
+    protocol  = "6" // tcp
+    source    = local.cidr_vcn
+    stateless = false
+
+    tcp_options {
+      min = 8082
+      max = 8082
+    }
+  }
+
   // Oracle TNS Listener port
   ingress_security_rules {
     protocol  = "6" // tcp
