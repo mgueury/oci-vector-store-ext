@@ -54,14 +54,15 @@ locals {
 locals {
   apigw_dest_private_ip = local.local_compute_ip
 }
+
 resource "oci_apigateway_deployment" "starter_apigw_deployment" {
   compartment_id = local.lz_app_cmp_ocid
   display_name   = "${var.prefix}-apigw-deployment"
   gateway_id     = local.apigw_ocid
-  path_prefix    = "/${var.prefix}"
+  path_prefix    = "/"
   specification {
     routes {
-      path    = "/app/{pathname*}"
+      path    = "/${var.prefix}/app/{pathname*}"
       methods = [ "ANY" ]
       backend {
         type = "HTTP_BACKEND"
@@ -73,24 +74,55 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment" {
     }     
     # Route the COMPUTE_PRIVATE_IP   
     routes {
-      path    = "/{pathname*}"
+      path    = "/${var.prefix}/{pathname*}"
       methods = [ "ANY" ]
       backend {
         type = "HTTP_BACKEND"
         url    = "http://${local.apigw_dest_private_ip}/$${request.path[pathname]}"
       }
     }      
-  }
-  freeform_tags = local.api_tags
-}  
-
-resource "oci_apigateway_deployment" "starter_apigw_deployment_chat" {
-  compartment_id = local.lz_app_cmp_ocid
-  display_name   = "${var.prefix}-chat1"
-  gateway_id     = local.apigw_ocid
-  path_prefix    = "/chat"
-  specification {
-    # Route the COMPUTE_PRIVATE_IP   
+    routes {
+      path    = "/i/{pathname*}"
+      methods = [ "ANY" ]
+      backend {
+        type = "HTTP_BACKEND"
+        url    = "${local.db_root_url}/ords/$${request.path[pathname]}"
+        connect_timeout_in_seconds = 60
+        read_timeout_in_seconds = 120
+        send_timeout_in_seconds = 120            
+      }
+      request_policies {
+        header_transformations {
+          set_headers {
+            items {
+              name = "Host"
+              values = ["$${request.headers[Host]}"]
+            }
+          }
+        }
+      }
+    }
+    routes {
+      path    = "/ords/{pathname*}"
+      methods = [ "ANY" ]
+      backend {
+        type = "HTTP_BACKEND"
+        url    = "${local.db_root_url}/i/$${request.path[pathname]}"
+        connect_timeout_in_seconds = 60
+        read_timeout_in_seconds = 120
+        send_timeout_in_seconds = 120            
+      }
+      request_policies {
+        header_transformations {
+          set_headers {
+            items {
+              name = "Host"
+              values = ["$${request.headers[Host]}"]
+            }
+          }
+        }
+      }
+    }          
     routes {
       path    = "/{pathname*}"
       methods = [ "ANY" ]
@@ -101,95 +133,7 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment_chat" {
         read_timeout_in_seconds = 120
         send_timeout_in_seconds = 120                    
       }
-    }      
+    }        
   }
   freeform_tags = local.api_tags
 }  
-
-resource "oci_apigateway_deployment" "starter_apigw_deployment_chat2" {
-  compartment_id = local.lz_app_cmp_ocid
-  display_name   = "${var.prefix}-chat2"
-  gateway_id     = local.apigw_ocid
-  path_prefix    = "/_next"
-  specification {
-    # Route the COMPUTE_PRIVATE_IP   
-    routes {
-      path    = "/{pathname*}"
-      methods = [ "ANY" ]
-      backend {
-        type = "HTTP_BACKEND"
-        url    = "http://${local.apigw_dest_private_ip}:8082/_next/$${request.path[pathname]}"
-        connect_timeout_in_seconds = 60
-        read_timeout_in_seconds = 120
-        send_timeout_in_seconds = 120                    
-      }
-    }      
-  }
-  freeform_tags = local.api_tags
-}  
-
-resource "oci_apigateway_deployment" "starter_apigw_deployment_chat3" {
-  compartment_id = local.lz_app_cmp_ocid
-  display_name   = "${var.prefix}-chat3"
-  gateway_id     = local.apigw_ocid
-  path_prefix    = "/api"
-  specification {
-    # Route the COMPUTE_PRIVATE_IP   
-    routes {
-      path    = "/{pathname*}"
-      methods = [ "ANY" ]
-      backend {
-        type = "HTTP_BACKEND"
-        url    = "http://${local.apigw_dest_private_ip}:8082/api/$${request.path[pathname]}"
-        connect_timeout_in_seconds = 60
-        read_timeout_in_seconds = 120
-        send_timeout_in_seconds = 120                    
-      }
-    }      
-  }
-  freeform_tags = local.api_tags
-}  
-
-resource "oci_apigateway_deployment" "starter_apigw_deployment_chat4" {
-  compartment_id = local.lz_app_cmp_ocid
-  display_name   = "${var.prefix}-chat4"
-  gateway_id     = local.apigw_ocid
-  path_prefix    = "/__nextjs_original-stack-frames"
-  specification {
-    # Route the COMPUTE_PRIVATE_IP   
-    routes {
-      path    = "/{pathname*}"
-      methods = [ "ANY" ]
-      backend {
-        type = "HTTP_BACKEND"
-        url    = "http://${local.apigw_dest_private_ip}:8082/__nextjs_original-stack-frames"
-        connect_timeout_in_seconds = 60
-        read_timeout_in_seconds = 120
-        send_timeout_in_seconds = 120                    
-      }
-    }      
-  }
-  freeform_tags = local.api_tags
-}  
-
-resource "oci_apigateway_deployment" "starter_apigw_deployment_chat5" {
-  compartment_id = local.lz_app_cmp_ocid
-  display_name   = "${var.prefix}-chat5"
-  gateway_id     = local.apigw_ocid
-  path_prefix    = "/settings"
-  specification {
-    # Route the COMPUTE_PRIVATE_IP   
-    routes {
-      path    = "/{pathname*}"
-      methods = [ "ANY" ]
-      backend {
-        type = "HTTP_BACKEND"
-        url    = "http://${local.apigw_dest_private_ip}:8082/settings/$${request.path[pathname]}"
-        connect_timeout_in_seconds = 60
-        read_timeout_in_seconds = 120
-        send_timeout_in_seconds = 120                    
-      }
-    }      
-  }
-  freeform_tags = local.api_tags
-} 
