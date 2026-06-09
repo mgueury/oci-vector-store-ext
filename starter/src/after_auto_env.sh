@@ -66,6 +66,9 @@ else
     fi
     export LANGGRAPH_APIKEY="##TF_VAR_db_password##"
 
+    # Chat
+    append_export "export APIGW_HOSTNAME=\"${APIGW_HOSTNAME}\""
+
     # LibreOffice
     append_tf_env "export INSTALL_LIBREOFFICE=\"no\""
 
