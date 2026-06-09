@@ -66,7 +66,7 @@ else
     fi
 
     # Chat
-    append_export "export APIGW_HOSTNAME=\"${APIGW_HOSTNAME}\""
+    append_tf_env "export APIGW_HOSTNAME=\"${APIGW_HOSTNAME}\""
 
     # LibreOffice
     append_tf_env "export INSTALL_LIBREOFFICE=\"no\""
