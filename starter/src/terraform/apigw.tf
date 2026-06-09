@@ -128,7 +128,7 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment_chat2" {
   freeform_tags = local.api_tags
 }  
 
-resource "oci_apigateway_deployment" "starter_apigw_deployment_chat2" {
+resource "oci_apigateway_deployment" "starter_apigw_deployment_chat3" {
   compartment_id = local.lz_app_cmp_ocid
   display_name   = "${var.prefix}-chat3"
   gateway_id     = local.apigw_ocid
