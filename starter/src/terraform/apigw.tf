@@ -108,7 +108,7 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment_chat" {
 
 resource "oci_apigateway_deployment" "starter_apigw_deployment_chat2" {
   compartment_id = local.lz_app_cmp_ocid
-  display_name   = "${var.prefix}-chat1"
+  display_name   = "${var.prefix}-chat2"
   gateway_id     = local.apigw_ocid
   path_prefix    = "/_next"
   specification {
@@ -119,6 +119,28 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment_chat2" {
       backend {
         type = "HTTP_BACKEND"
         url    = "http://${local.apigw_dest_private_ip}:8082/_next/$${request.path[pathname]}"
+        connect_timeout_in_seconds = 60
+        read_timeout_in_seconds = 120
+        send_timeout_in_seconds = 120                    
+      }
+    }      
+  }
+  freeform_tags = local.api_tags
+}  
+
+resource "oci_apigateway_deployment" "starter_apigw_deployment_chat2" {
+  compartment_id = local.lz_app_cmp_ocid
+  display_name   = "${var.prefix}-chat3"
+  gateway_id     = local.apigw_ocid
+  path_prefix    = "/api"
+  specification {
+    # Route the COMPUTE_PRIVATE_IP   
+    routes {
+      path    = "/{pathname*}"
+      methods = [ "ANY" ]
+      backend {
+        type = "HTTP_BACKEND"
+        url    = "http://${local.apigw_dest_private_ip}:8082/api/$${request.path[pathname]}"
         connect_timeout_in_seconds = 60
         read_timeout_in_seconds = 120
         send_timeout_in_seconds = 120                    
