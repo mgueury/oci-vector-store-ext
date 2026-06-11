@@ -5,6 +5,9 @@ cd $ROOT_DIR
 
 . ./starter.sh env -silent
 
+
+# Due to public_ip_filter. Add also the NAT_IP gateway to the security list.
+
 # Upload Sample Files
 sleep 5
 echo "https://${APIGW_HOSTNAME}/${TF_VAR_prefix}/index.html" > ../sample_files/website.crawler
@@ -33,6 +36,11 @@ append_done
 append_done "-----------------------------------------------------------------------"
 append_done "LangGraph Agent Chat:"
 append_done "${BASE_URL}/chat.html"
+append_done
+append_done
+append_done "-----------------------------------------------------------------------"
+append_done "ReactJS Chat:"
+append_done "https://${APIGW_HOSTNAME}/"
 append_done
 append_done "-----------------------------------------------------------------------"
 append_done "Oracle Digital Assistant (Web Channel)"

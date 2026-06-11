@@ -64,7 +64,9 @@ else
         append_tf_env "export LANGGRAPH_URL=\"http://127.0.0.1:2024\""
         append_tf_env "export MCP_SERVER_URL=\"http://localhost:2025/mcp\""
     fi
-    export LANGGRAPH_APIKEY="##TF_VAR_db_password##"
+
+    # Chat
+    append_tf_env "export APIGW_HOSTNAME=\"${APIGW_HOSTNAME}\""
 
     # LibreOffice
     append_tf_env "export INSTALL_LIBREOFFICE=\"no\""

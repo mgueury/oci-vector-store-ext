@@ -2,6 +2,7 @@ locals {
   db_root_url = replace(data.oci_database_autonomous_database.starter_atp.connection_urls[0].apex_url, "/ords/apex", "" )
 }
 
+/*
 # One single entry "/" would work too. 
 # The reason of the 3 entries is to allow to make it work when the APIGW is shared with other URLs (ex: testsuite)
 resource "oci_apigateway_deployment" "starter_apigw_deployment_ords" {
@@ -67,3 +68,5 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment_i" {
   }
   freeform_tags = local.api_tags
 }
+*/
+

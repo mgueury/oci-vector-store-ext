@@ -1,0 +1,10 @@
+node_modules
+.next/cache
+.git
+docs
+*.md
+.env*
+Dockerfile
+.dockerignore
+k8s*
+build.sh

@@ -54,14 +54,15 @@ locals {
 locals {
   apigw_dest_private_ip = local.local_compute_ip
 }
+
 resource "oci_apigateway_deployment" "starter_apigw_deployment" {
   compartment_id = local.lz_app_cmp_ocid
   display_name   = "${var.prefix}-apigw-deployment"
   gateway_id     = local.apigw_ocid
-  path_prefix    = "/${var.prefix}"
+  path_prefix    = "/"
   specification {
     routes {
-      path    = "/app/{pathname*}"
+      path    = "/${var.prefix}/app/{pathname*}"
       methods = [ "ANY" ]
       backend {
         type = "HTTP_BACKEND"
@@ -73,13 +74,66 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment" {
     }     
     # Route the COMPUTE_PRIVATE_IP   
     routes {
-      path    = "/{pathname*}"
+      path    = "/${var.prefix}/{pathname*}"
       methods = [ "ANY" ]
       backend {
         type = "HTTP_BACKEND"
         url    = "http://${local.apigw_dest_private_ip}/$${request.path[pathname]}"
       }
     }      
+    routes {
+      path    = "/i/{pathname*}"
+      methods = [ "ANY" ]
+      backend {
+        type = "HTTP_BACKEND"
+        url    = "${local.db_root_url}/ords/$${request.path[pathname]}"
+        connect_timeout_in_seconds = 60
+        read_timeout_in_seconds = 120
+        send_timeout_in_seconds = 120            
+      }
+      request_policies {
+        header_transformations {
+          set_headers {
+            items {
+              name = "Host"
+              values = ["$${request.headers[Host]}"]
+            }
+          }
+        }
+      }
+    }
+    routes {
+      path    = "/ords/{pathname*}"
+      methods = [ "ANY" ]
+      backend {
+        type = "HTTP_BACKEND"
+        url    = "${local.db_root_url}/i/$${request.path[pathname]}"
+        connect_timeout_in_seconds = 60
+        read_timeout_in_seconds = 120
+        send_timeout_in_seconds = 120            
+      }
+      request_policies {
+        header_transformations {
+          set_headers {
+            items {
+              name = "Host"
+              values = ["$${request.headers[Host]}"]
+            }
+          }
+        }
+      }
+    }          
+    routes {
+      path    = "/{pathname*}"
+      methods = [ "ANY" ]
+      backend {
+        type = "HTTP_BACKEND"
+        url    = "http://${local.apigw_dest_private_ip}:8082/$${request.path[pathname]}"
+        connect_timeout_in_seconds = 60
+        read_timeout_in_seconds = 120
+        send_timeout_in_seconds = 120                    
+      }
+    }        
   }
   freeform_tags = local.api_tags
 }  
