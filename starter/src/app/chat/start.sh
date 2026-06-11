@@ -13,10 +13,12 @@ export NEXT_PUBLIC_GENAI_API_URL="https://${APIGW_HOSTNAME}/api"
 # Container deployments (RESOURCE_PRINCIPAL or INSTANCE_PRINCIPAL instead of config file)
 export USE_INSTANCE_PRINCIPAL=true
 
-# export IDCS_DOMAIN_URL=$IDCS_URL
-# export IDCS_CLIENT_ID=$TF_VAR_openid_client_id
-# export IDCS_CLIENT_SECRET=$TF_VAR_openid_client_secret
-# export SESSION_SECRET='abcdefgh1234567890'
+if [ "$TF_VAR_openid_client_id" != "" ]; then
+    export IDCS_DOMAIN_URL=$IDCS_URL
+    export IDCS_CLIENT_ID=$TF_VAR_openid_client_id
+    export IDCS_CLIENT_SECRET=$TF_VAR_openid_client_secret
+    export SESSION_SECRET='abcdefgh1234567890'
+fi    
 
 # export IDCS_DOMAIN_URL=$IDCS_URLhttps://idcs-xxxx.identity.oraclecloud.com
 # export IDCS_CLIENT_ID=...
