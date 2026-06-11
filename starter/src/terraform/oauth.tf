@@ -1,6 +1,7 @@
 locals {
   openid_client_id = try( oci_identity_domains_app.starter_confidential_app[0].name, "" )
   openid_client_secret = try( oci_identity_domains_app.starter_confidential_app[0].client_secret, "" )
+  apigw_hostname = oci_apigateway_gateway.starter_apigw.hostname
 }
 
 variable "openid" {
