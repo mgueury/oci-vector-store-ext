@@ -35,6 +35,15 @@ if ! grep -q "export LC_CTYPE" $HOME/.bashrc; then
     # Resize the boot volume (if >47GB)
     sudo /usr/libexec/oci-growfs -y
 
+    # Workaround: DNF issue Sometimes the dnf variables are wrong...
+    ocidomain=`cat /etc/dnf/vars/ocidomain`
+    if [ "$ocidomain" == "oracle.com" ]; then
+        echo "WARNING: ocidomain=oracle.com. Trying to fix it."
+        region=`cat /etc/dnf/vars/region`
+        sudo bash -c 'echo "oci.oraclecloud.com" > /etc/dnf/vars/ocidomain'
+        sudo bash -c "echo \".$region\" > /etc/dnf/vars/ociregion"
+    fi
+
     # Workaround : Force the ol8_oci_included (sometimes it is deactivated)
     sudo dnf config-manager --enable ol8_oci_included
 
