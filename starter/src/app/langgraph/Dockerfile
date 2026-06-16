@@ -1,19 +1,11 @@
-FROM python:3.13-trixie
+FROM python:3-bookworm
+
+RUN pip install --upgrade pip
 
 WORKDIR /app
-
-# Install uv / no venv
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-RUN sh /uv-installer.sh && rm /uv-installer.sh
-ENV PATH="/root/.local/bin:/app/.local/bin:${PATH}"
-ENV UV_SYSTEM_PYTHON=1
-
-# Cache the requirements if possible
-COPY src_langgraph/requirements.txt /app/.
-RUN uv pip install -r requirements.txt
-
-# Copy the APP
-COPY src_langgraph/* /app/
-
-ENTRYPOINT ["langgraph", "dev", "--host", "0.0.0.0"]
+ENV PATH="/app/.local/bin:${PATH}"
+COPY ./ /app/
+RUN pip3 install -r requirements.txt
+WORKDIR "/app/agent"
+ENTRYPOINT ["langgraph", "dev", "--port", "8080", "--host", "0.0.0.0"]
 

@@ -70,6 +70,7 @@ async def inject_user_context(
     # print( f"<inject_user_context> auth_header={auth_header}", flush=True )
     # modified_request = request.override( headers = { "Authorization": f"User {user_id}" } )
     cleaned_args = remove_empty_parameter_names(request.args)
+    # Forward the original request credentials to every MCP tool call.
     modified_request = request.override(
         args=cleaned_args,
         headers={ "Authorization": auth_header },
@@ -102,6 +103,7 @@ async def inject_user_context(
 
 async def init( agent_name, prompt, tools_list, callback_handler=None ) -> StateGraph:
 
+    # Build the graph once at process startup; app.py streams runs from this object.
     # Waiting is important, since after reboot the MCP server could start afterwards.
     delay = 10
     for attempt in range(1, 30):
@@ -142,35 +144,26 @@ async def init( agent_name, prompt, tools_list, callback_handler=None ) -> State
         prompt=prompt,
         name=agent_name
     ) 
-    return agent    
+    return agent 
+   
+prompt = """You are a support agent.
 
-prompt_rag = """You are a research agent.
+INSTRUCTIONS:
+- When you receive a question, search the answer by calling the tools search and the tool find_service_request
+- Combine the response of the 2 tools to create a final answer to the user or several possible answers found in the different documents.
+- Answer only based on the result of the tools used. Do not add any other response or content that is not in the result of the tools.
 
-            INSTRUCTIONS:
-            - Assist ONLY with research-related tasks, DO NOT do any math.
-            - Respond ONLY with the results of your work, do NOT include ANY other text.
-            """
+REFERENCES:
+- When you answer always give the list of document on which you based your response. Give this in a table format. 2 columns.
+- Show only the references that were used to answer the question.
+- One line for each reference found in 
+    - For the tool search. Give the document path and content.
+    - For the tool find_service_request. Give the link to the SR and the question.   
+Ex:
+| Link | Text |
+| ---- | ---- |                                                                
+| [SR 1](https://url/sr/1) | SR question |                                                                
+| [Document Name](https://document_url/) | Document content |                                                                
+"""
 
-agent_rag = asyncio.run(init("agent_rag", prompt_rag, None))
-
-prompt_sr = """You are a support agent.
-            INSTRUCTIONS:
-            - When you receive a question, search the answer by calling the tools search and the tool find_service_request
-            - Combine the response of the 2 tools to create a final answer to the user or several possible answers found in the different documents.
-            - Answer only based on the result of the tools used. Do not add any other response or content that is not in the result of the tools.
-            
-            REFERENCES:
-            - When you answer always give the list of document on which you based your response. Give this in a table format. 2 columns.
-            - Show only the references that were used to answer the question.
-            - One line for each reference found in 
-               - For the tool search. Give the document path and content.
-               - For the tool find_service_request. Give the link to the SR and the question.   
-            Ex:
-            | Link | Text |
-            | ---- | ---- |                                                                
-            | [SR 1](https://url/sr/1) | SR question |                                                                
-            | [Document Name](https://document_url/) | Document content |                                                                
-            """
-
-agent_sr = asyncio.run(init("agent_sr", prompt_sr,
-            ["search","find_service_request","get_service_request"]))
+agent = asyncio.run(init("agent", prompt, None))

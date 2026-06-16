@@ -3,8 +3,11 @@
 langchain_oci==0.2.1
 langchain_openai
 oci-openai
-langgraph-cli[inmem]
+langgraph
 langchain_mcp_adapters
+fastapi
+uvicorn[standard]
+aiohttp
 
 # OAuth Caching 
 aiocache
