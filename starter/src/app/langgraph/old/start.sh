@@ -4,10 +4,11 @@ cd $SCRIPT_DIR
 export PATH=~/.local/bin/:$PATH
 
 . $HOME/compute/tf_env.sh
-export MCP_SERVER_URL="http://localhost:2025/mcp"
 
-# Start LangGraph CompiledStateGraph on port 2024
+# Start LangGraph CompiledStateGraph on port 8080
 source myenv/bin/activate
+cd agent
 
-port_wait 8080 | tee rest.log
-python rest.py 2>&1 | tee -a rest.log
+export LOG_COLOR=false
+langgraph dev --no-reload --host 0.0.0.0 --port 8080 2>&1 | tee ../langgraph.log
+

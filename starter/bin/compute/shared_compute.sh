@@ -116,7 +116,6 @@ install_java() {
             # sudo update-alternatives --set native-image $JAVA_HOME/lib/svm/bin/native-image
         fi   
         sudo update-alternatives --set java $JAVA_HOME/bin/java
-        echo "export JAVA_HOME=${JAVA_HOME}" >> $HOME/.bashrc
     else
         # JDK 
         # Needed due to concurrency
@@ -137,7 +136,9 @@ install_java() {
             # cd -
             # sudo update-alternatives --set java $JAVA_LATEST_PATH/bin/java
         fi
+        export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
     fi
+    echo "export JAVA_HOME=${JAVA_HOME}" >> $HOME/.bashrc    
 
     # JMS agent deploy (to fleet_ocid )
     if [ -f jms_agent_deploy.sh ]; then
@@ -147,7 +148,26 @@ install_java() {
 
   # Build on Bastion
     if [ "$TF_VAR_build_host" == "bastion" ]; then 
-        sudo dnf install -y maven
+        # sudo dnf install -y maven
+        if [ ! -d $HOME/maven ]; then
+            BASE_URL="https://dlcdn.apache.org/maven/maven-3"
+            LATEST_VERSION=$(
+                wget -qO- "$BASE_URL/" |
+                grep -oE 'href="[0-9]+\.[0-9]+\.[0-9]+/' |
+                sed 's|href="||;s|/||' |
+                sort -V |
+                tail -1
+            )
+            FILE="apache-maven-${LATEST_VERSION}-bin.tar.gz"
+            URL="${BASE_URL}/${LATEST_VERSION}/binaries/${FILE}"
+            echo "Downloading Maven ${LATEST_VERSION}..."
+            wget -nv "$URL"
+            tar xfz $FILE
+            mv apache-maven-${LATEST_VERSION} $HOME/maven
+            rm $FILE
+            export PATH=$HOME/maven/bin:$PATH
+            echo "export PATH=$HOME/maven/bin:$PATH" >> $HOME/.bashrc 
+        fi
     fi
 }
 export -f install_java
@@ -228,7 +248,9 @@ install_python() {
     sudo dnf install -y python3.12 python3.12-pip python3-devel wget
     sudo update-alternatives --set python /usr/bin/python3.12
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    uv venv myenv
+    if [ ! -d myenv ]; then
+        uv venv myenv
+    fi
     source myenv/bin/activate
     if [ -f requirements.txt ]; then 
       uv pip install -r requirements.txt
@@ -260,7 +282,7 @@ install_libreoffice() {
     echo LIBRE_OFFICE_EXE=$LIBRE_OFFICE_EXE
     cd -
 } 
-export -f install_libreoffice    
+export -f install_libreoffice   
 
 # -- install_chrome  --------------------------------------------------------
 install_chrome() {
@@ -298,6 +320,8 @@ install_instant_client() {
     fi
 }
 export -f install_instant_client   
+
+# -- create_self_signed_ip_certificate --------------------------------------
 
 create_self_signed_ip_certificate()
 {
@@ -369,7 +393,8 @@ EOF
 }
 export -f create_self_signed_ip_certificate 
 
-# -- Install NGINX  ------------------------------------------------------------------
+# -- install_ngnix ----------------------------------------------------------
+
 install_ngnix() {
     title "NGINX"
     sudo dnf install nginx -y > /tmp/dnf_nginx.log
@@ -419,11 +444,36 @@ install_ngnix() {
 }
 export -f install_ngnix 
 
+# -- install_nodejs -----------------------------------------------------
+
+install_nodejs() {
+    sudo dnf module enable -y nodejs:20
+    sudo dnf module install -y nodejs
+}
+export -f install_nodejs     
+
+# -- install_cline_cli -----------------------------------------------------
+# https://docs.cline.bot/cline-cli/installation
+
+install_cline_cli() {
+    install_nodejs
+    sudo npm install -g cline
+    cline version
+    if [ "$TF_VAR_genai_api_key" == "" ] || [ "$TF_VAR_genai_model" == "" ] || [ "$TF_VAR_region" == "" ]; then
+        echo "<install_cline_cli> SKIP: Missing variables TF_VAR_genai_api_key=$TF_VAR_genai_api_key / TF_VAR_genai_model=$TF_VAR_genai_model / TF_VAR_region=$TF_VAR_region"
+    else 
+        # cline auth -p openai -k $TF_VAR_genai_api_key -b https://inference.generativeai.${TF_VAR_region}.oci.oraclecloud.com -m $TF_VAR_genai_model
+        cline auth -p openai -k $TF_VAR_genai_api_key -b https://inference.generativeai.${TF_VAR_region}.oci.oraclecloud.com -m openai.gpt-oss-120b
+    fi 
+    # xai.grok-4-1-fast-non-reasoning
+}
+export -f install_cline_cli 
+
 # -- Install Docker tools ---------------------------------------------------
 
 install_docker_tools() {
     # docker 
-    sudo yum install -y docker
+    sudo dnf install -y docker
     sudo touch /etc/containers/nodocker
 
     # oci cli
@@ -469,15 +519,46 @@ copy_replace_apply_target_oke() {
 }
 export -f copy_replace_apply_target_oke 
 
+# -- docker_token -----------------------------------------------------------
+
+docker_token() {
+    # Create a temporary docker auth_token (valid for 1 hour)...
+    if [ "$DOCKER_TOKEN" == "" ]; then
+        export DOCKER_TOKEN=`oci raw-request --region $TF_VAR_region --http-method GET --target-uri "https://${OCIR_HOST}/20180419/docker/token" | jq -r .data.token`
+        echo "DOCKER_TOKEN=$DOCKER_TOKEN" | cut -c 1-50
+    else
+        echo "DOCKER_TOKEN already set."
+    fi
+}
+export -f docker_token
+
 # -- docker_login -----------------------------------------------------------
+
 docker_login() {
+    echo "<docker_login>"
     get_docker_prefix
     # Login only if needed
     if ! docker system info 2>/dev/null | grep -q "Username"; then
-        oci raw-request --region $TF_VAR_region --http-method GET --target-uri "https://${OCIR_HOST}/20180419/docker/token" | jq -r .data.token | docker login -u BEARER_TOKEN --password-stdin ${OCIR_HOST}
+        docker_token
+        echo $DOCKER_TOKEN | docker login -u BEARER_TOKEN --password-stdin ${OCIR_HOST}
     fi
     exit_on_error "Docker Login"
 }
+export -f docker_login
+
+# -- k8s_create_ocirsecret --------------------------------------------------
+
+k8s_create_ocirsecret() {
+    echo "<k8s_create_ocirsecret>"
+    kubectl delete secret ocirsecret  --ignore-not-found=true
+    if [ "$TF_VAR_auth_token" == "" ]; then
+        docker_token         
+        kubectl create secret docker-registry ocirsecret --docker-server=$OCIR_HOST --docker-username="BEARER_TOKEN" --docker-password="$DOCKER_TOKEN" --docker-email="$TF_VAR_email"
+    else
+        kubectl create secret docker-registry ocirsecret --docker-server=$OCIR_HOST --docker-username="$OBJECT_STORAGE_NAMESPACE/$TF_VAR_username" --docker-password="$TF_VAR_auth_token" --docker-email="$TF_VAR_email"
+    fi  
+}
+export -f k8s_create_ocirsecret
 
 # -- ocir_docker_push_app -------------------------------------------------------
 ocir_docker_push_app() {
@@ -518,11 +599,20 @@ oke_deploy_app() {
     if [ -f k8s.yaml ]; then
         copy_replace_apply_target_oke k8s.yaml $APP
     fi
-    if [ -f k8s-ingress.yaml ]; then
-        copy_replace_apply_target_oke k8s-ingress.yaml $APP
+    if [ -f k8s-httproute.yaml ]; then
+        copy_replace_apply_target_oke k8s-httproute.yaml $APP
     fi
 }
 export -f oke_deploy_app
+
+# -- oke_get_gateway_ip -----------------------------------------------------
+
+oke_get_gateway_ip() {
+    if [ "$TF_VAR_gateway_ip" == "" ]; then
+        export TF_VAR_gateway_ip=$(kubectl get gateway oke-gateway -n gateway -o json | jq -r '.status.addresses[].value | select(startswith("10.") | not)')
+    fi
+}
+export -f oke_get_gateway_ip
 
 # -- is_deploy_compute ------------------------------------------------------
 is_deploy_compute() {
@@ -532,6 +622,8 @@ is_deploy_compute() {
         return 1
     fi
 }
+
+export -f is_deploy_compute
 
 # -- build_ui ---------------------------------------------------------------
 build_ui() {
@@ -609,6 +701,7 @@ build_rsync() {
 export -f build_rsync
 
 # -- livelab_oci_config ------------------------------------------------------------
+
 # Create a OCI Config for LiveLab (that does not support instance principal)
 livelab_oci_config()
 {
@@ -637,3 +730,35 @@ EOF
   fi
 }
 export -f livelab_oci_config
+
+# -- port_owner ------------------------------------------------------------
+port_owner() {
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -nP -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true
+    elif command -v ss >/dev/null 2>&1; then
+        ss -ltnp "sport = :$PORT" 2>/dev/null || true
+    fi
+}
+export -f port_owner
+
+# -- port_wait ------------------------------------------------------------
+port_wait() {
+    PORT=$1
+    for attempt in {1..10}; do
+        PORT_OWNER=$(port_owner)
+        if [ -z "$PORT_OWNER" ]; then
+            break
+        fi
+        echo "Port $PORT is already in use. Waiting 5 seconds before starting FastAPI (attempt $attempt/10)."
+        echo "$PORT_OWNER"
+        sleep 5
+    done
+
+    PORT_OWNER=$(port_owner)
+    if [ -n "$PORT_OWNER" ]; then
+        echo "ERROR: Port $PORT is still in use after 10 attempts." 
+        echo "$PORT_OWNER"
+        exit 1
+    fi
+}
+export -f port_wait
