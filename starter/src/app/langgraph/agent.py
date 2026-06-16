@@ -144,8 +144,9 @@ async def init( agent_name, prompt, tools_list, callback_handler=None ) -> State
         prompt=prompt,
         name=agent_name
     ) 
-    return agent    
-prompt = -"""You are a support agent.
+    return agent 
+   
+prompt = """You are a support agent.
 
 INSTRUCTIONS:
 - When you receive a question, search the answer by calling the tools search and the tool find_service_request
