@@ -224,13 +224,13 @@ async function renderMessage(msgObj) {
     if (msgType === 'human') {
         innerHTML = `<div class="bubble"><div class="meta">You</div>${renderMarkdown(msgObj.content)}</div>`;
     } else if (msgType === 'ai') {
-        if (msgObj.content) {
-            innerHTML = `<div class="bubble"><div class="meta">AI</div>${await renderContent(msgObj.content)}</div>`;
-        } else if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
+        if (msgObj.tool_calls && msgObj.tool_calls.length > 0) {
             const buttons = msgObj.tool_calls.map(toolCall =>
                 createToolButton(`Call: ${toolCall.name || 'tool'}`, renderToolCallBody(toolCall))
             );
             renderToolEventLine(el, buttons);
+        } else if (msgObj.content) {
+            innerHTML = `<div class="bubble"><div class="meta">AI</div>${await renderContent(msgObj.content)}</div>`;
         }
     } else if (msgType === 'tool') {
         renderToolEventLine(el, [
