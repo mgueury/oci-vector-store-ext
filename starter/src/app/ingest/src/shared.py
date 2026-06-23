@@ -563,7 +563,7 @@ def responses_search( question ):
             }
         ],
         extra_headers={"OpenAI-Project": PROJECT_OCID},
-        tool_choice="auto",
+        tool_choice="required",
         include=["file_search_call.results"],
     )
     return responses_format( response )
