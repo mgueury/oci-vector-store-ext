@@ -168,10 +168,10 @@ begin
   AI_CONFIG_UPDATE( 'bucket_url',          '$BUCKET_URL' );
   AI_CONFIG_UPDATE( 'rag_search_type',     'vector' );
   -- AI_EVAL
-  AI_CONFIG_UPDATE( 'qa_url',              '$BASE_URL/langgraph/runs/wait' );
+  AI_CONFIG_UPDATE( 'qa_url',              '$BASE_URL/app/runs/wait' );
   AI_CONFIG_UPDATE( 'genai_meta_model',    '$TF_VAR_genai_meta_model' );
   -- AI_LANGGRAPH
-  AI_CONFIG_UPDATE( 'langgraph_thread_url', '$BASE_URL/langgraph/threads' );
+  AI_CONFIG_UPDATE( 'langgraph_thread_url', '$BASE_URL/app/threads' );
   AI_CONFIG_UPDATE( 'idcs_url', '$IDCS_URL' );
   commit;
 end;
