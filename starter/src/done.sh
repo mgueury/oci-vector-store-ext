@@ -10,7 +10,7 @@ cd $ROOT_DIR
 
 # Upload Sample Files
 sleep 5
-echo "https://${APIGW_HOSTNAME}/${TF_VAR_prefix}/index.html" > ../sample_files/website.crawler
+echo "https://${APIGW_HOSTNAME}/${TF_VAR_prefix}/tourism.html" > ../sample_files/website.crawler
 oci os object bulk-upload -ns $OBJECT_STORAGE_NAMESPACE -bn ${TF_VAR_prefix}-upload-bucket --src-dir ../sample_files --overwrite --content-type auto
 
 title "INSTALLATION DONE"
@@ -35,7 +35,7 @@ append_done "  User: APEX_APP / $TF_VAR_db_password"
 append_done
 append_done "-----------------------------------------------------------------------"
 append_done "LangGraph Agent Chat:"
-append_done "${BASE_URL}/chat.html"
+append_done "${BASE_URL}/index.html"
 append_done
 append_done
 append_done "-----------------------------------------------------------------------"
@@ -49,7 +49,7 @@ append_done
 if [ "$TF_VAR_openid" == "true" ]; then
     append_done "-----------------------------------------------------------------------"
     append_done "LangGraph OpenID Chat:"
-    append_done "https://${APIGW_HOSTNAME}/openid/chat.html"
+    append_done "https://${APIGW_HOSTNAME}/openid/index.html"
     append_done
 fi
 if [ "$TF_VAR_kubernetes" == "true" ]; then
