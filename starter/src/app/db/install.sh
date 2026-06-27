@@ -67,6 +67,37 @@ begin
   commit;
 end;
 /
+
+-- UTL_HTTP access 
+DECLARE
+   apex_schema varchar2(256);
+BEGIN
+   select FIRST_SCHEMA_PROVISIONED into apex_schema from APEX_WORKSPACE_APEX_USERS where WORKSPACE_NAME='INTERNAL';
+   DBMS_OUTPUT.PUT_LINE('APEX_SCHEMA=' || apex_schema );
+   DBMS_NETWORK_ACL_ADMIN.APPEND_HOST_ACE(
+         host => '*',
+         ace =>  xs\$ace_type(privilege_list => xs\$name_list('http'),
+                             principal_name => apex_schema,
+                             principal_type => xs_acl.ptype_db));
+END;
+/
+BEGIN
+   DBMS_NETWORK_ACL_ADMIN.APPEND_HOST_ACE(
+         host => '*',
+         ace =>  xs\$ace_type(privilege_list => xs\$name_list('http'),
+                             principal_name => 'APEX_APP',
+                             principal_type => xs_acl.ptype_db));
+END;
+/
+-- Database using a private endpoint in a private subnet. The DB calls via HTTPS API Gateway in private network too.
+-- Setting ROUTE_OUTBOUND_CONNECTIONS = 'PRIVATE_ENDPOINT'
+-- See: https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/private-endpoints-autonomous.html#GUID-8FCA06C0-E1C1-49F6-82C2-6B7B3787CF3B
+ALTER DATABASE PROPERTY SET ROUTE_OUTBOUND_CONNECTIONS = 'PRIVATE_ENDPOINT'
+/
+SELECT * FROM DATABASE_PROPERTIES
+        WHERE PROPERTY_NAME = 'ROUTE_OUTBOUND_CONNECTIONS'
+/
+
 begin
     apex_instance_admin.add_workspace(
      p_workspace_id   => null,

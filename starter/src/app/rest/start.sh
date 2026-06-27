@@ -11,7 +11,7 @@ source myenv/bin/activate
 
 port_wait 8080 | tee rest.log
 
-export DEFAULT_AGENT_PROMPT="You are a support agent.
+export AGENT_PROMPT="You are a support agent.
 
 INSTRUCTIONS:
 - When you receive a question, search the answer by calling the tools search and the tool find_service_request
