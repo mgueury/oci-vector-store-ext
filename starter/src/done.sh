@@ -10,7 +10,7 @@ cd $ROOT_DIR
 
 # Upload Sample Files
 sleep 5
-echo "https://${APIGW_HOSTNAME}/${TF_VAR_prefix}/index.html" > ../sample_files/website.crawler
+echo "https://${APIGW_HOSTNAME}/${TF_VAR_prefix}/tourism.html" > ../sample_files/website.crawler
 oci os object bulk-upload -ns $OBJECT_STORAGE_NAMESPACE -bn ${TF_VAR_prefix}-upload-bucket --src-dir ../sample_files --overwrite --content-type auto
 
 title "INSTALLATION DONE"
