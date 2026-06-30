@@ -22,30 +22,24 @@ def get_auth_header():
     return auth_header
     # "EMPLOYEE" if "EMPLOYEE" in auth_header else "CUSTOMER"
 
-@mcp.tool()
-def search(question: str) -> dict:
-    """Search in document repository."""
-    print(f"<search> question={question}", flush=True)    
-    print(f"<search> RAG_STORAGE={RAG_STORAGE}", flush=True)    
-    return shared.responses_search( question )
+# @mcp.tool()
+# def list_documents() ->  List[DocInfo]:
+#     """get the list of documents. Return for each document (PATH, TITLE)"""
+#     print("<list_documents>", flush=True)
+#     return rag_storage.getDocList()
 
-@mcp.tool()
-def list_documents() ->  List[DocInfo]:
-    """get the list of documents. Return for each document (PATH, TITLE)"""
-    print("<list_documents>", flush=True)
-    return rag_storage.getDocList()
+# @mcp.tool()
+# def get_document_summary(doc_path: str) -> dict:
+#     """get document summary by path"""
+#     print("<get_document_summary>", flush=True)
+#     return rag_storage.getDocByPath(doc_path)
 
-@mcp.tool()
-def get_document_summary(doc_path: str) -> dict:
-    """get document summary by path"""
-    print("<get_document_summary>", flush=True)
-    return rag_storage.getDocByPath(doc_path)
+# @mcp.tool()
+# def get_document_by_path(doc_path: str) -> dict:
+#     """get document by path"""
+#     print("<get_document_by_path>", flush=True)
+#     return rag_storage.getDocByPath(doc_path)
 
-@mcp.tool()
-def get_document_by_path(doc_path: str) -> dict:
-    """get document by path"""
-    print("<get_document_by_path>", flush=True)
-    return rag_storage.getDocByPath(doc_path)
 
 @mcp.tool()
 def find_service_request(question: str) -> List[dict]:
