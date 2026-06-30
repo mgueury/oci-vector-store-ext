@@ -35,7 +35,7 @@ append_done "  User: APEX_APP / $TF_VAR_db_password"
 append_done
 append_done "-----------------------------------------------------------------------"
 append_done "LangGraph Agent Chat:"
-append_done "${BASE_URL}/chat.html"
+append_done "${BASE_URL}/index.html"
 append_done
 append_done
 append_done "-----------------------------------------------------------------------"
