@@ -14,12 +14,11 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 
-from agent import agent, reload_agent_config
-from config import config_router, set_agent_reload_callback
+from agent import agent
+
 
 app = FastAPI(title="LangGraph Agent")
-set_agent_reload_callback(reload_agent_config)
-app.include_router(config_router)
+
 
 # Minimal user object passed through LangGraph runtime config to agent.py.
 @dataclass
@@ -176,21 +175,6 @@ def agent_config(auth_user: AuthUser) -> dict[str, Any]:
     }
 
 
-def get_thread_for_run(thread_id: str, payload: dict[str, Any]) -> ThreadState:
-    if payload.get("assistant_id") not in {None, "agent"}:
-        raise HTTPException(status_code=404, detail="Unknown assistant")
-
-    thread = threads.get(thread_id)
-    if thread is None:
-        raise HTTPException(status_code=404, detail="Unknown thread")
-
-    return thread
-
-
-def run_output_payload(messages: list[Any]) -> dict[str, Any]:
-    return {"messages": [message_to_payload(message) for message in messages]}
-
-
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -217,7 +201,13 @@ async def stream_run(
     payload: dict[str, Any] = Body(default_factory=dict),
     auth_user: AuthUser = Depends(get_current_user),
 ) -> StreamingResponse:
-    thread = get_thread_for_run(thread_id, payload)
+    if payload.get("assistant_id") not in {None, "agent"}:
+        raise HTTPException(status_code=404, detail="Unknown assistant")
+
+    thread = threads.get(thread_id)
+    if thread is None:
+        raise HTTPException(status_code=404, detail="Unknown thread")
+
     new_messages = messages_from_payload(payload)
 
     async def event_stream() -> AsyncIterator[str]:
@@ -252,40 +242,6 @@ async def stream_run(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
-
-
-@app.post("/threads/{thread_id}/runs/wait")
-async def wait_run(
-    thread_id: str,
-    payload: dict[str, Any] = Body(default_factory=dict),
-    auth_user: AuthUser = Depends(get_current_user),
-) -> dict[str, Any]:
-    thread = get_thread_for_run(thread_id, payload)
-    new_messages = messages_from_payload(payload)
-
-    async with thread.lock:
-        try:
-            # Same run semantics as /runs/stream, but return the final state as JSON.
-            input_messages = [*thread.messages, *new_messages]
-            final_messages = input_messages
-
-            async for state in agent.astream(
-                {"messages": input_messages},
-                config=agent_config(auth_user),
-                stream_mode="values",
-            ):
-                messages = list(state.get("messages", []))
-                if messages:
-                    final_messages = messages
-
-            thread.messages = final_messages
-            thread.next_message_id = max(thread.next_message_id, len(final_messages))
-            thread.last_accessed = time.time()
-            return run_output_payload(final_messages)
-        except asyncio.CancelledError:
-            raise
-        except Exception as exc:
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 if __name__ == "__main__":
