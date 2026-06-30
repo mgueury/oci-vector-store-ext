@@ -6,39 +6,42 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.interceptors import MCPToolCallRequest
 import asyncio
 import os
+import time
 import pprint
 import httpx
 import oci_openai 
 from typing import Any
-from config import DEFAULT_AGENT_PROMPT, config
-from search import get_search_tools
 
-def build_llm_openai():
-    auth = oci_openai.OciInstancePrincipalAuth()
-    return ChatOpenAI(
-        model="xai.grok-4-fast-reasoning",
-        api_key="OCI",
-        base_url="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1",
-        http_client=httpx.Client(
-            auth=auth,
-            headers={"CompartmentId": config("COMPARTMENT_OCID")}
-        ),
-    )
+COMPARTMENT_OCID = os.getenv("TF_VAR_compartment_ocid")
+REGION = os.getenv("TF_VAR_region")
+MCP_SERVER_URL = os.getenv("MCP_SERVER_URL") or "http://localhost:2025/mcp"
+if REGION == "eu-amsterdam-1":
+    REGION = "eu-frankfurt-1"
+AUTH_TYPE = os.getenv("AUTH_TYPE") or "INSTANCE_PRINCIPAL"
 
-def build_llm() -> ChatOCIGenAI:
-    return ChatOCIGenAI(
-        auth_type="API_KEY" if "LIVELABS" in os.environ else config("AUTH_TYPE"),
-        model_id=config("GENAI_MODEL"),
-        # model_id="meta.llama-4-scout-17b-16e-instruct",
-        # model_id="cohere.command-a-03-2025",
-        service_endpoint="https://inference.generativeai."+config("REGION")+".oci.oraclecloud.com",
-        # model_id="xai.grok-4.3",
-        # service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
-        compartment_id=config("COMPARTMENT_OCID"),
-        is_stream=False,
-        model_kwargs={"temperature": 0}
-    )
+# auth = oci_openai.OciInstancePrincipalAuth()
+# llm = ChatOpenAI(
+#     model="xai.grok-4-fast-reasoning",
+#     api_key="OCI",
+#     base_url="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/v1",
+#     http_client=httpx.Client(
+#         auth=auth,
+#         headers={"CompartmentId": COMPARTMENT_OCID}
+#     ),
+# )
 
+llm = ChatOCIGenAI(
+    auth_type="API_KEY" if "LIVELABS" in os.environ else AUTH_TYPE,
+    model_id="openai.gpt-oss-120b",
+    # model_id="meta.llama-4-scout-17b-16e-instruct",
+    # model_id="cohere.command-a-03-2025",
+    service_endpoint="https://inference.generativeai."+REGION+".oci.oraclecloud.com",
+    # model_id="xai.grok-4.3",
+    # service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+    compartment_id=COMPARTMENT_OCID,
+    is_stream=False,
+    model_kwargs={"temperature": 0}
+)
 
 def remove_empty_parameter_names(args: dict[str, Any] | None) -> dict[str, Any]:
     """Remove tool arguments whose parameter name is empty or only whitespace."""
@@ -68,13 +71,10 @@ async def inject_user_context(
     # modified_request = request.override( headers = { "Authorization": f"User {user_id}" } )
     cleaned_args = remove_empty_parameter_names(request.args)
     # Forward the original request credentials to every MCP tool call.
-    if config("MCP_AUTH_TYPE")=="STATIC_BEARER_TOKEN":
-        headers = {"Authorization": "Bearer " + config("MCP_STATIC_BEARER_TOKEN") }
-    elif config("MCP_AUTH_TYPE")=="NONE" and not auth_header:
-        headers = {}
-    else:
-        headers = {"Authorization": auth_header}
-    modified_request = request.override(args=cleaned_args, headers=headers)
+    modified_request = request.override(
+        args=cleaned_args,
+        headers={ "Authorization": auth_header },
+    )
     try:
         return await handler(modified_request)
     except Exception as first_error:
@@ -101,31 +101,19 @@ async def inject_user_context(
             "guidance": "Tool call failed. Adjust parameters based on this error and retry with corrected values.",
         }
 
-async def init( agent_name, prompt, callback_handler=None ) -> StateGraph:
+async def init( agent_name, prompt, tools_list, callback_handler=None ) -> StateGraph:
 
     # Build the graph once at process startup; app.py streams runs from this object.
     # Waiting is important, since after reboot the MCP server could start afterwards.
     delay = 10
-    client = None
-    agent_tools = list(get_search_tools())
-    llm = build_llm()
-    if not config("MCP_SERVER_URL"):
-        print("MCP_SERVER_URL is not configured; starting agent without MCP tools")
-        return create_react_agent(
-            model=llm,
-            tools=agent_tools,
-            prompt=prompt,
-            name=agent_name
-        )
-
-    for attempt in range(1, 10):
+    for attempt in range(1, 30):
         try:
             print(f"Connecting to MCP {attempt}...")
             client = MultiServerMCPClient(
                 {
                     "McpServer": {
                         "transport": "streamable_http",
-                        "url": config("MCP_SERVER_URL"),
+                        "url": MCP_SERVER_URL,                     
                     },
                 },
                 tool_interceptors=[inject_user_context],
@@ -133,47 +121,49 @@ async def init( agent_name, prompt, callback_handler=None ) -> StateGraph:
             tools = await client.get_tools()
             print( "-- tools ------------------------------------------------------------")
             pprint.pprint( tools )
-            agent_tools = [*agent_tools, *tools]
-            print( "-- agent_tools ------------------------------------------------------")
-            pprint.pprint( agent_tools )
+            # Filter tools.
+            tools_filtered = []
+            for tool in tools:
+                if tools_list==None or tool.name in tools_list:
+                    tools_filtered.append( tool )
+            print( "-- tools_filtered ---------------------------------------------------")
+            pprint.pprint( tools_filtered )
             break
         except Exception as e:
             print(f"Connection failed {attempt}: {e}")            
             print(f"Waiting for {delay} seconds before the next attempt...")
-            await asyncio.sleep(delay)
+            time.sleep(delay)
 
     if client==None:
-        raise RuntimeError("ERROR: connection to MCP Failed")
+        print("ERROR: connection to MCP Failed")
+        exit(1)
 
     agent = create_react_agent(
         model=llm,
-        tools=agent_tools,
+        tools=tools_filtered,
         prompt=prompt,
         name=agent_name
     ) 
-    return agent    
+    return agent 
+   
+prompt = """You are a support agent.
 
-async def build_agent() -> StateGraph:
-    return await init("agent", config("AGENT_PROMPT") or DEFAULT_AGENT_PROMPT)
+INSTRUCTIONS:
+- When you receive a question, search the answer by calling the tools search and the tool find_service_request
+- Combine the response of the 2 tools to create a final answer to the user or several possible answers found in the different documents.
+- Answer only based on the result of the tools used. Do not add any other response or content that is not in the result of the tools.
 
+REFERENCES:
+- When you answer always give the list of document on which you based your response. Give this in a table format. 2 columns.
+- Show only the references that were used to answer the question.
+- One line for each reference found in 
+    - For the tool search. Give the document path and content.
+    - For the tool find_service_request. Give the link to the SR and the question.   
+Ex:
+| Link | Text |
+| ---- | ---- |                                                                
+| [SR 1](https://url/sr/1) | SR question |                                                                
+| [Document Name](https://document_url/) | Document content |                                                                
+"""
 
-class AgentRuntime:
-    def __init__(self, graph: StateGraph):
-        self._graph = graph
-        self._reload_lock = asyncio.Lock()
-
-    async def astream(self, *args, **kwargs):
-        graph = self._graph
-        async for state in graph.astream(*args, **kwargs):
-            yield state
-
-    async def reload(self) -> None:
-        async with self._reload_lock:
-            self._graph = await build_agent()
-
-
-agent = AgentRuntime(asyncio.run(build_agent()))
-
-
-async def reload_agent_config() -> None:
-    await agent.reload()
+agent = asyncio.run(init("agent", prompt, None))
