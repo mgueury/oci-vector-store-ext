@@ -16,7 +16,7 @@ resource "null_resource" "custom_dependency" {
         append_export "TF_VAR_openid_client_secret" "${local.openid_client_secret}"
         EOT
     }
-    depends_on = [ null_resource.tf_env, oci_streaming_stream_pool.starter_stream_pool ]
+    depends_on = [ null_resource.tf_env, oci_streaming_stream_pool.starter_stream_pool, oci_identity_policy.starter_search_policy ]
 
     triggers = {
         always_run = "${timestamp()}"
