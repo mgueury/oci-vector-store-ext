@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
-. $HOME/compute/tf_env.sh
+. ../ingest/env.sh
 
 # OCI Enterprise AI: set to your tenancy's region
 export OCI_REGION=$TF_VAR_region
