@@ -15,3 +15,4 @@ python -m pip install --user podman-compose
 
 # Firewall 
 sudo firewall-cmd --zone=public --add-port=3000/tcp --permanent
+
