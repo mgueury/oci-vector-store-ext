@@ -122,7 +122,28 @@ resource "oci_apigateway_deployment" "starter_apigw_deployment" {
           }
         }
       }
-    }          
+    }  
+    routes {
+      path    = "/langfuse/{pathname*}"
+      methods = [ "ANY" ]
+      backend {
+        type = "HTTP_BACKEND"
+        url    = "http://${local.apigw_dest_private_ip}:3000/$${request.path[pathname]}"
+        connect_timeout_in_seconds = 60
+        read_timeout_in_seconds = 120
+        send_timeout_in_seconds = 120            
+      }
+      request_policies {
+        header_transformations {
+          set_headers {
+            items {
+              name = "Host"
+              values = ["$${request.headers[Host]}"]
+            }
+          }
+        }
+      }
+    }             
     routes {
       path    = "/{pathname*}"
       methods = [ "ANY" ]

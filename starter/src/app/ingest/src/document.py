@@ -28,6 +28,7 @@ def eventDocument(value):
         return
     elif resourceName.endswith("metadata.json"):
         rb.convertMetadata( value )
+        return
     elif resourceName.endswith(".anonymized.pdf"):
         file_convert.convertUploadAnonymizedPDF( value )
         return
