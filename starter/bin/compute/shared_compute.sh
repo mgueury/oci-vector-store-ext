@@ -493,6 +493,7 @@ install_docker_tools() {
     curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH_PREFIX}/kubectl
     chmod +x kubectl
     echo "source <(kubectl completion bash)" >> ~/.bashrc
+    cd -
 }
 export -f install_docker_tools
 
