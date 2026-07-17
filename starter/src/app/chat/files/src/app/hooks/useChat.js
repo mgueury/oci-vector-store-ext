@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import createGenaiAgentService from "../services/genaiAgentsService";
 import ConversationStorage from "../services/conversationStorage";
-import { generateTitle } from "../services/titleService";
+import { createFallbackTitle, generateTitle } from "../services/titleService";
 import { groupMessages, parseContentWithWidgets } from "../utils/messageUtils";
 import { createWidgetStreamParser } from "../utils/widgetParser";
 import { createWidgetV2StreamParser, serializeWidgetV2Tree } from "../utils/widgetV2Parser";
@@ -794,7 +794,9 @@ export default function useChat({ initialConversationId = null, selectedModel, o
     const sessionActiveServers = inputRef.current?.getSessionActiveServers?.() || undefined;
 
     if (isNewConversation) {
-      await genaiService.createConversation("New conversation");
+      // Save a meaningful title immediately. The AI-generated title below will
+      // replace this concise fallback after the first response completes.
+      await genaiService.createConversation(createFallbackTitle(inputText));
       const newConvId = genaiService.getConversationId();
       if (newConvId) {
         const storedConv = await ConversationStorage.get(newConvId);
@@ -1208,11 +1210,11 @@ export default function useChat({ initialConversationId = null, selectedModel, o
         if (convId) {
           const needsTitle = isNewConversation || await ConversationStorage.get(convId).then(c => !c?.title || c.title === "New conversation").catch(() => false);
           if (needsTitle) {
-            generateTitle(inputText, result.answer).then(title => {
-              if (title) {
-                ConversationStorage.update(convId, { title }).then(refreshRecentConversations);
-              }
-            });
+            const title = await generateTitle(inputText, result.answer);
+            if (title) {
+              await ConversationStorage.update(convId, { title });
+              await refreshRecentConversations();
+            }
           }
         }
       }
