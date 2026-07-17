@@ -1210,12 +1210,16 @@ export default function useChat({ initialConversationId = null, selectedModel, o
         if (convId) {
           const needsTitle = isNewConversation || await ConversationStorage.get(convId).then(c => !c?.title || c.title === "New conversation").catch(() => false);
           if (needsTitle) {
+            console.log('sendAndStreamMessage');
             const title = await generateTitle(inputText, result.answer);
+            console.log('sendAndStreamMessage: ' + title);
+
             if (title) {
               const updatedConversation = await ConversationStorage.update(convId, { title });
               // Update the sidebar immediately. A storage refresh is also kept
               // for pagination/order, but relying on it alone can leave the
               // first-render snapshot (the fallback title) on screen.
+              console.log('sendAndStreamMessage: ' + updatedConversation);              
               if (updatedConversation) {
                 setRecentConversations(previous => previous.map(conversation =>
                   conversation.id === convId ? updatedConversation : conversation

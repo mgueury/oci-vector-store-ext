@@ -205,6 +205,7 @@ const ConversationStorage = {
         return existing;
       }
 
+      console.log('Add title:', title);
       const newConversation = {
         id,
         urlId: generateUrlId(),
