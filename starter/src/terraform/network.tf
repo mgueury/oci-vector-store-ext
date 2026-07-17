@@ -137,7 +137,7 @@ resource "oci_core_security_list" "starter_security_list" {
     # Connection from the nat_gateway IP. (For ex: to allow crawling of the website)
     ingress_security_rules {
         protocol  = "6" // tcp
-        source    = "${oci_core_nat_gateway.starter_nat_gateway.nat_ip}/32"
+        source    = "${oci_core_nat_gateway.starter_nat_gateway[0].nat_ip}/32"
         stateless = false
         tcp_options {
             min = 443
