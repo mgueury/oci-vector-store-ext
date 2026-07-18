@@ -1206,10 +1206,10 @@ export default function useChat({ initialConversationId = null, selectedModel, o
 
       // Generate title for new conversations
       if (result?.answer && inputText) {
-        const convId = genaiService.getConversationId();
-        console.log('sendAndStreamMessage: ' + convId);
-        if (convId) {
-          convId = convId.id
+        const conv = genaiService.getConversationId();
+        console.log('sendAndStreamMessage: ' + conv);
+        if (conv) {
+          const convId = conv.id
           const needsTitle = isNewConversation || await ConversationStorage.get(convId).then(c => !c?.title || c.title === "New conversation").catch(() => false);
           if (needsTitle) {
             console.log('sendAndStreamMessage');
