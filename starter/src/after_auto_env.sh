@@ -77,9 +77,11 @@ else
         append_tf_env "export TF_VAR_project_ocid=\"$TF_VAR_project_ocid\""
     fi
 
-    # LangFuse
-    # append_tf_env "export LANGFUSE_SECRET_KEY=\"sk-lf-xxxxx\""
-    # append_tf_env "export LANGFUSE_PUBLIC_KEY=\"pk-lf-xxxxx\""
-    # append_tf_env "export LANGFUSE_BASE_URL=\"http://xxxx:3000\""
-    # append_tf_env "export LOG_LEVEL=info"
+    # LangFuse (Optional)
+    if [ "$TF_VAR_langfuse_public_key" != "" ]; then
+        append_tf_env "export LANGFUSE_SECRET_KEY=\"$TF_VAR_langfuse_secret_key\""
+        append_tf_env "export LANGFUSE_PUBLIC_KEY=\"$TF_VAR_langfuse_public_key\""
+        append_tf_env "export LANGFUSE_BASE_URL=\"$TF_VAR_langfuse_base_url\""
+        append_tf_env "export LOG_LEVEL=info"
+    fi
 fi

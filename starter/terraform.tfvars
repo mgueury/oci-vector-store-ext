@@ -30,3 +30,8 @@ genai_model="openai.gpt-oss-120b"
 # Uncomment to enable login in LangGraph application using OpenID via API Gateway and Confidential Application 
 # Needs OCI Identity Domain rights.
 # openid="true"
+
+# LangFuse
+# langfuse_public_key="pk-lf-change-it"
+# langfuse_secret_key="sk-lf-change-it"
+# langfuse_base_url="http://langfuse-compute.##PREFIX##web.##PREFIX##vcn.oraclevcn.com:3000"
