@@ -69,6 +69,26 @@ exit_on_error() {
 }
 export -f exit_on_error
 
+# -- dnf_makecache ----------------------------------------------------------
+dnf_makecache() {
+    # Wait that the machine is ready
+    success=0
+    for i in {1..10}; do
+        if sudo dnf makecache; then
+            success=1
+            break
+        fi
+        echo "Waiting 10 secs for yum repositories... ($i/10)"
+        sleep 10
+    done
+
+    if [ "$success" -eq 0 ]; then
+        echo "ERROR: Yum repositories are still not reachable after 100 seconds."
+        exit 1
+    fi
+}
+export -f dnf_makecache
+
 # -- replace_db_user_password_in_file ----------------------------------------
 replace_db_user_password_in_file() {
     # Replace DB_USER DB_PASSWORD
@@ -493,6 +513,7 @@ install_docker_tools() {
     curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH_PREFIX}/kubectl
     chmod +x kubectl
     echo "source <(kubectl completion bash)" >> ~/.bashrc
+    cd -
 }
 export -f install_docker_tools
 

@@ -76,4 +76,12 @@ else
         append_tf_env "export TF_VAR_genai_model=\"$TF_VAR_genai_model\""
         append_tf_env "export TF_VAR_project_ocid=\"$TF_VAR_project_ocid\""
     fi
+
+    # LangFuse (Optional)
+    if [ "$TF_VAR_langfuse_public_key" != "" ]; then
+        append_tf_env "export LANGFUSE_SECRET_KEY=\"$TF_VAR_langfuse_secret_key\""
+        append_tf_env "export LANGFUSE_PUBLIC_KEY=\"$TF_VAR_langfuse_public_key\""
+        append_tf_env "export LANGFUSE_BASE_URL=\"$TF_VAR_langfuse_base_url\""
+        append_tf_env "export LOG_LEVEL=info"
+    fi
 fi

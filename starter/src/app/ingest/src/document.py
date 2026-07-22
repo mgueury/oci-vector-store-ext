@@ -3,6 +3,7 @@ from shared import log_in_file
 import rag_storage
 import file_convert
 import shared
+import rb
 
 ## -- eventDocument ---------------------------------------------------------
 
@@ -24,6 +25,9 @@ def eventDocument(value):
     if resourceExtension in [".tif"] or resourceName.endswith(".to_anonymize.pdf"):
         # This will create a JSON file in Object Storage that will create a second even with resourceExtension "json" 
         file_convert.convertOciDocumentUnderstanding(value)
+        return
+    elif resourceName.endswith("metadata.json"):
+        rb.convertMetadata( value )
         return
     elif resourceName.endswith(".anonymized.pdf"):
         file_convert.convertUploadAnonymizedPDF( value )
