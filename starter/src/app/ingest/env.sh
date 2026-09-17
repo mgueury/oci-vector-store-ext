@@ -3,15 +3,6 @@
 export DB_USER="apex_app"
 
 # LangFuse
-# export LANGFUSE_PUBLIC_KEY=<your_public_key>
-# export LANGFUSE_SECRET_KEY=<your_secret_key>
-export LANGFUSE_HOST=http://localhost:3000
-
-
-# export LANGSMITH_TRACING=true
-# export LANGSMITH_TRACING=true
-# export LANGSMITH_API_KEY=<your-api-key>
-# export LANGSMITH_WORKSPACE_ID=agext
 
 # Python VirtualEnv
 if [ -d myenv ]; then

@@ -256,6 +256,7 @@ install_sqlcl() {
     cd $HOME/app/db
     if [ ! -f sqlcl-latest.zip ]; then
         download https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
+        sudo dnf install -y unzip 
         rm -Rf sqlcl
         unzip sqlcl-latest.zip
     fi 

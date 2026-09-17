@@ -4,7 +4,7 @@ from typing import Any
 
 import json
 import oci
-from oci.generative_ai_data import GenerateSqlFromNlJobClient
+from oci.generative_ai_data import GenerateSqlClient
 from oci.generative_ai_data.models import GenerateSqlFromNlDetails
 from oci.retry import NoneRetryStrategy
 
@@ -204,7 +204,7 @@ def search_database(question: str) -> dict[str, Any]:
 
         signer = build_oci_signer()
 
-        client = GenerateSqlFromNlJobClient(
+        client = GenerateSqlClient(
             config={},
             signer=signer,
             service_endpoint=service_endpoint,

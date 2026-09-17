@@ -2,32 +2,12 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
 
-# Install SQL*Plus
-if [[ `arch` == "aarch64" ]]; then
-  sudo dnf install -y oracle-release-el8 
-  sudo dnf install -y oracle-instantclient19.19-basic oracle-instantclient19.19-sqlplus oracle-instantclient19.19-tools
-else
-  sudo dnf install -y oracle-instantclient-release-el8
-  sudo dnf install -y oracle-instantclient-basic oracle-instantclient-sqlplus oracle-instantclient-tools
-fi
+. $HOME/compute/shared_compute.sh
 
-# Install the tables
-cat > tnsnames.ora <<EOT
-DB  = $DB_URL
-EOT
+install_instant_client
+install_sqlcl
 
-export TNS_ADMIN=$SCRIPT_DIR
 export NLS_LANG=AMERICAN_AMERICA.UTF8
-
-# Install SQLCL (Java program)
-if [ ! -f sqlcl-latest.zip ]; then 
-  wget https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
-  rm -Rf sqlcl
-  unzip sqlcl-latest.zip
-  sudo dnf install -y java-17 
-else 
-  echo "sqlcl already installed"
-fi  
 
 # Create the script to install the APEX Application
 cat > import_application.sql << EOF 
